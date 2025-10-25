@@ -1,6 +1,6 @@
-Báo cáo công việc hàng tuần - Nhóm đồ án SE2025-15.1
+# Báo cáo công việc hàng tuần - Nhóm đồ án SE2025-15.1
 
-Tuần 08 (20/10/2025 -> 25/10/2025):
+## Tuần 08 (20/10/2025 -> 25/10/2025):
 
 - Hoàng Lê Tuấn:
 
