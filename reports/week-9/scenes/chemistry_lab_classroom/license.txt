@@ -1,0 +1,8 @@
+Model Information:
+* title:	Chemestry lab Classroom
+* source:	https://sketchfab.com/3d-models/chemestry-lab-classroom-8ae79eab8a0d48ad9d7a0f02319024db
+* author:	stylo0 (https://sketchfab.com/stylo0)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works
