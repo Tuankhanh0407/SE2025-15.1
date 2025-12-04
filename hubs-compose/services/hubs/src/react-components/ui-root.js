@@ -51,6 +51,7 @@ import { MicSetupModalContainer } from "./room/MicSetupModalContainer";
 import { InvitePopoverContainer } from "./room/InvitePopoverContainer";
 import { MoreMenuPopoverButton, CompactMoreMenuButton, MoreMenuContextProvider } from "./room/MoreMenuPopover";
 import { ChatSidebarContainer } from "./room/ChatSidebarContainer";
+import { WhiteboardSidebar } from "./room/WhiteboardSidebar";
 import { ContentMenu, PeopleMenuButton, ObjectsMenuButton, ECSDebugMenuButton } from "./room/ContentMenu";
 import { ReactComponent as CameraIcon } from "./icons/Camera.svg";
 import { ReactComponent as AvatarIcon } from "./icons/Avatar.svg";
@@ -211,7 +212,8 @@ class UIRoot extends Component {
     sidebarId: null,
     presenceCount: 0,
     chatPrefix: "",
-    chatAutofocus: false
+    chatAutofocus: false,
+    showWhiteboard: false
   };
 
   constructor(props) {
@@ -1591,7 +1593,15 @@ class UIRoot extends Component {
                     </>
                   ) : undefined
                 }
-                modal={this.state.dialog}
+                modal={
+                  <>
+                    {this.state.dialog}
+                    <WhiteboardSidebar
+                      visible={this.state.showWhiteboard}
+                      onClose={() => this.setState({ showWhiteboard: false })}
+                    />
+                  </>
+                }
                 toolbarLeft={
                   <>
                     <InvitePopoverContainer
@@ -1599,6 +1609,12 @@ class UIRoot extends Component {
                       hubChannel={this.props.hubChannel}
                       scene={this.props.scene}
                       store={this.props.store}
+                    />
+                    <ToolbarButton
+                      icon={<CameraIcon />}
+                      preset="accent5"
+                      label={<FormattedMessage id="toolbar.whiteboard" defaultMessage="Whiteboard" />}
+                      onClick={() => this.setState({ showWhiteboard: !this.state.showWhiteboard })}
                     />
                     {isLockedDownDemo && <SeePlansCTA />}
                   </>

@@ -43,7 +43,7 @@ export default class SceneEntryManager {
     /**
      * @type {Function}
      */
-    this.performConditionalSignIn = () => {};
+    this.performConditionalSignIn = () => { };
     this.history = history;
   }
 
