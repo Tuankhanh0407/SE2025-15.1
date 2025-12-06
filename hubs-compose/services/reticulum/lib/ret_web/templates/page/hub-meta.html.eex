@@ -1,0 +1,40 @@
+<link rel="icon" sizes="16x16 24x24 32x32 48x48 64x64" href="/favicon.ico">
+
+<script type="application/ld+json">
+    {
+        "@context": "https://schema.org/",
+        "@type": "VirtualLocation",
+        "name": "<%= @name %>",
+        "url": "<%= @hub |> Ret.Hub.url_for %>",
+        "image": "<%= @hub |> Ret.Hub.image_url_for %>",
+        "description": "<%= @description %>"
+    }
+</script>
+
+<meta property="og:type" content="website" />
+<meta property="og:url" content="<%= @hub |> Ret.Hub.url_for %>" />
+<meta property="og:title" content="<%= @name %>" />
+<meta name="description" property="og:description" content="<%= @description_social_media %>" />
+<meta property="og:image" content="<%= @hub |> Ret.Hub.image_url_for %>"/>
+<meta name="application-name" property="og:site_name" content="<%= @translations["app-full-name"] || @translations["app-name"] || RetWeb.Endpoint.host() %>"/>
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:domain" content="<%= RetWeb.Endpoint.host %>" />
+<meta name="twitter:title" content="<%= @name %>" />
+<meta name="twitter:description" content="<%= @description_social_media %>" />
+<meta name="twitter:image" content="<%= @hub |> Ret.Hub.image_url_for %>"/>
+<meta name="twitter:url" content="<%= @hub |> Ret.Hub.url_for %>" />
+
+<meta name="ret:version" value="<%= @ret_meta[:version] %>" />
+<meta name="ret:phx_host" value="<%= @ret_meta[:phx_host] %>" />
+<meta name="ret:phx_port" value="<%= @ret_meta[:phx_port] %>" />
+<meta name="ret:pool" value="<%= @ret_meta[:pool] %>" />
+
+<link rel="apple-touch-icon" href="/app-icon.png">
+
+<title><%= @title %></title>
+
+<%= @available_integrations_script %>
+<%= @app_config_script %>
+<%= @extra_html %>
+<%= @extra_script %>

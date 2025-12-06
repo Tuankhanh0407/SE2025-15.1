@@ -1,0 +1,11 @@
+name: hc-pkg
+on:
+  workflow_dispatch:
+
+jobs:
+  hcpkgrelease:
+    uses: Hubs-Foundation/hubs-ops/.github/workflows/HcPkgPreReleaseGitops.yaml@master
+    with:
+      main: master
+      releaseTrackingBranch: polycosm
+      qaTestBranch: qa-test
