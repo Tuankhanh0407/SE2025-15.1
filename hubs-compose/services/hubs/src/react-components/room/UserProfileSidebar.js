@@ -93,12 +93,12 @@ export function UserProfileSidebar({
               isSignedIn
                 ? intl.formatMessage({ id: "user-profile-sidebar.promote-button", defaultMessage: "Promote" })
                 : intl.formatMessage(
-                    {
-                      id: "user-profile-sidebar.promote-button-disabled-label",
-                      defaultMessage: "{displayName} is signed out."
-                    },
-                    { displayName }
-                  )
+                  {
+                    id: "user-profile-sidebar.promote-button-disabled-label",
+                    defaultMessage: "{displayName} is signed out."
+                  },
+                  { displayName }
+                )
             }
             onClick={onPromote}
           >
@@ -113,12 +113,12 @@ export function UserProfileSidebar({
               isSignedIn
                 ? intl.formatMessage({ id: "user-profile-sidebar.demote-button", defaultMessage: "Demote" })
                 : intl.formatMessage(
-                    {
-                      id: "user-profile-sidebar.demote-button-disabled-label",
-                      defaultMessage: "{displayName} is signed out."
-                    },
-                    { displayName }
-                  )
+                  {
+                    id: "user-profile-sidebar.demote-button-disabled-label",
+                    defaultMessage: "{displayName} is signed out."
+                  },
+                  { displayName }
+                )
             }
             onClick={onDemote}
           >

@@ -100,6 +100,14 @@ function getPersonName(person, intl) {
   return `${person.profile.displayName} ${suffix}`;
 }
 
+function isPersonTeacher(person) {
+  // Check profile.isTeacher first, then fall back to owner/creator
+  if (person.profile?.isTeacher !== undefined) {
+    return person.profile.isTeacher;
+  }
+  return person.roles?.owner || person.roles?.creator || false;
+}
+
 export function PeopleSidebar({
   people,
   onSelectPerson,
@@ -177,6 +185,11 @@ export function PeopleSidebar({
                   </ToolTip>
                 )}
                 <p>{getPersonName(person, intl)}</p>
+                {isPersonTeacher(person) ? (
+                  <span className={styles.roleBadge} title="Teacher">🎓</span>
+                ) : (
+                  <span className={styles.roleBadgeStudent} title="Student">📚</span>
+                )}
                 {person.roles.owner && (
                   <StarIcon
                     title={intl.formatMessage({ id: "people-sidebar.moderator-label", defaultMessage: "Moderator" })}
@@ -207,6 +220,6 @@ PeopleSidebar.propTypes = {
 
 PeopleSidebar.defaultProps = {
   people: [],
-  onSelectPerson: () => {},
+  onSelectPerson: () => { },
   isMod: false
 };

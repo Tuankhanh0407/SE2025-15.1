@@ -178,3 +178,32 @@
     cursor: crosshair;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
+
+:local(.teachers-only) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    text-align: center;
+    color: theme.$text2-color;
+
+    h3 {
+        margin: 16px 0 8px;
+        font-size: 24px;
+        font-weight: 600;
+        color: theme.$text1-color;
+    }
+
+    p {
+        margin: 0;
+        font-size: 14px;
+        max-width: 300px;
+        line-height: 1.5;
+    }
+}
+
+:local(.teachers-only-icon) {
+    font-size: 64px;
+}
