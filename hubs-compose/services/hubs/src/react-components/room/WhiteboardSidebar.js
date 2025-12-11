@@ -7,6 +7,7 @@ import styles from "./WhiteboardSidebar.scss";
 import { ReactComponent as DeleteIcon } from "../icons/Delete.svg";
 import { ReactComponent as ArrowBackIcon } from "../icons/ArrowBack.svg";
 import { ReactComponent as ShareIcon } from "../icons/Share.svg";
+import { useTeacherRole } from "./hooks/useTeacherRole";
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
@@ -29,6 +30,9 @@ export function WhiteboardSidebar({ onClose, visible }) {
     const [lineWidth, setLineWidth] = useState(5);
     const [historyStack, setHistoryStack] = useState([]);
     const [isSharing, setIsSharing] = useState(false);
+
+    // Check if user is a teacher
+    const { isTeacher } = useTeacherRole();
 
     // Initialize canvas every time it becomes visible
     useEffect(() => {
@@ -214,6 +218,32 @@ export function WhiteboardSidebar({ onClose, visible }) {
     }, [createShareableImage]);
 
     if (!visible) return null;
+
+    // Show "Teachers Only" message for students
+    if (!isTeacher) {
+        return (
+            <div className={styles.whiteboardSidebar}>
+                <div className={styles.header}>
+                    <CloseButton onClick={onClose} />
+                    <h2 className={styles.title}>
+                        <FormattedMessage id="whiteboard-sidebar.title" defaultMessage="Whiteboard" />
+                    </h2>
+                </div>
+                <div className={styles.teachersOnly}>
+                    <span className={styles.teachersOnlyIcon}>🎓</span>
+                    <h3>
+                        <FormattedMessage id="whiteboard-sidebar.teachers-only" defaultMessage="Teachers Only" />
+                    </h3>
+                    <p>
+                        <FormattedMessage
+                            id="whiteboard-sidebar.teachers-only-desc"
+                            defaultMessage="Only teachers can use the whiteboard. Ask a teacher to share with you!"
+                        />
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.whiteboardSidebar}>
