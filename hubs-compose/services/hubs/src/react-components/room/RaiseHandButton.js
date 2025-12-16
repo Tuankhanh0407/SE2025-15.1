@@ -5,6 +5,7 @@ import { ReactComponent as HandRaisedIcon } from "../icons/HandRaised.svg";
 import { defineMessage, useIntl } from "react-intl";
 import { ToolTip } from "@mozilla/lilypad-ui";
 import { SOUND_CAMERA_TOOL_TOOK_SNAPSHOT } from "../../systems/sound-effects-system";
+import { useTeacherRole } from "./hooks/useTeacherRole";
 
 const raiseHandLabel = defineMessage({
     id: "toolbar.raise-hand",
@@ -34,6 +35,7 @@ export function RaiseHandButton({ scene, initialPresence }) {
     const intl = useIntl();
     const presence = usePresence(scene, initialPresence);
     const handRaised = presence?.hand_raised;
+    const { isTeacher } = useTeacherRole();
 
     const onToggleHandRaised = useCallback(() => {
         if (handRaised) {
@@ -44,6 +46,11 @@ export function RaiseHandButton({ scene, initialPresence }) {
             scene.systems["hubs-systems"].soundEffectsSystem.playSoundOneShot(SOUND_CAMERA_TOOL_TOOK_SNAPSHOT);
         }
     }, [handRaised, scene]);
+
+    // Teachers don't need the raise hand feature
+    if (isTeacher) {
+        return null;
+    }
 
     const label = intl.formatMessage(handRaised ? lowerHandLabel : raiseHandLabel);
 
