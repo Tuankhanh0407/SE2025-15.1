@@ -54,6 +54,7 @@ import { ChatSidebarContainer } from "./room/ChatSidebarContainer";
 import { WhiteboardSidebar } from "./room/WhiteboardSidebar";
 import { AttendanceSidebar } from "./room/AttendanceSidebar";
 import { TeacherToolbarButtons } from "./room/TeacherToolbarButtons";
+import { HandRaiseNotification } from "./room/HandRaiseNotification";
 import { ContentMenu, PeopleMenuButton, ObjectsMenuButton, ECSDebugMenuButton } from "./room/ContentMenu";
 import { ReactComponent as CameraIcon } from "./icons/Camera.svg";
 import { ReactComponent as AvatarIcon } from "./icons/Avatar.svg";
@@ -1607,6 +1608,7 @@ class UIRoot extends Component {
                       visible={this.state.showAttendance}
                       onClose={() => this.setState({ showAttendance: false })}
                     />
+                    <HandRaiseNotification />
                   </>
                 }
                 toolbarLeft={

@@ -5,6 +5,14 @@ import { getAvatarThumbnailUrl } from "../../utils/avatar-utils";
 import { UserProfileSidebar } from "./UserProfileSidebar.js";
 import { SignInMessages } from "../auth/SignInModal";
 
+// Helper to check if a user is a teacher
+function checkIsUserTeacher(user) {
+  if (user?.profile?.isTeacher !== undefined) {
+    return user.profile.isTeacher;
+  }
+  return user?.roles?.owner || user?.roles?.creator || false;
+}
+
 export function UserProfileSidebarContainer({
   user,
   hubChannel,
@@ -32,6 +40,9 @@ export function UserProfileSidebarContainer({
   const mayAddOwner = hubChannel.canOrWillIfCreator("update_roles") && !isOwner && !isCreator;
   const mayRemoveOwner = hubChannel.canOrWillIfCreator("update_roles") && isOwner && !isCreator;
   const [isHidden, setIsHidden] = useState(hubChannel.isHidden(user.id));
+
+  // Check if this user is a teacher
+  const isUserTeacher = checkIsUserTeacher(user);
 
   useEffect(() => {
     if (avatarId) {
@@ -122,6 +133,7 @@ export function UserProfileSidebarContainer({
       onClose={onClose}
       onBack={onBack}
       hasMicPresence={hasMicPresence}
+      isUserTeacher={isUserTeacher}
     />
   );
 }
@@ -136,3 +148,4 @@ UserProfileSidebarContainer.propTypes = {
   onCloseDialog: PropTypes.func.isRequired,
   showNonHistoriedDialog: PropTypes.func
 };
+

@@ -7,6 +7,8 @@ import { UserProfileSidebarContainer } from "./UserProfileSidebarContainer";
 import { useCan } from "./hooks/useCan";
 import { useRoomPermissions } from "./hooks/useRoomPermissions";
 import { useRole } from "./hooks/useRole";
+import { SpeakPermissionModal } from "./SpeakPermissionModal";
+import { useLectureMode } from "./hooks/useLectureMode";
 
 export function userFromPresence(sessionId, presence, micPresences, mySessionId, voiceEnabled) {
   const meta = presence.metas[presence.metas.length - 1];
@@ -44,6 +46,14 @@ function usePeopleList(presences, mySessionId, micUpdateFrequency = 500) {
   }, [presences, micUpdateFrequency, setPeople, mySessionId, voiceChatEnabled]);
 
   return people;
+}
+
+// Helper to check if a user is a teacher
+function checkIsUserTeacher(user) {
+  if (user?.profile?.isTeacher !== undefined) {
+    return user.profile.isTeacher;
+  }
+  return user?.roles?.owner || user?.roles?.creator || false;
 }
 
 function PeopleListContainer({ hubChannel, people, onSelectPerson, onClose }) {
@@ -93,15 +103,78 @@ export function PeopleSidebarContainer({
 }) {
   const people = usePeopleList(presences, mySessionId);
   const [selectedPersonId, setSelectedPersonId] = useState(null);
+  const [showSpeakModal, setShowSpeakModal] = useState(false);
   const selectedPerson = people.find(person => person.id === selectedPersonId);
+
+  const {
+    lectureModeEnabled,
+    isTeacher,
+    hasSpeakingPermission,
+    grantSpeakingPermission,
+    revokeSpeakingPermission
+  } = useLectureMode();
+
   const setSelectedPerson = useCallback(
     person => {
-      setSelectedPersonId(person.id);
+      const personIsTeacher = checkIsUserTeacher(person);
+
+      // Show speak modal if:
+      // - Current user is teacher AND
+      // - Person clicked is NOT a teacher AND
+      // - Person is not "me" AND
+      // - (Lecture mode is on OR the student has their hand raised)
+      const shouldShowSpeakModal = isTeacher &&
+        !personIsTeacher &&
+        person.id !== mySessionId &&
+        (lectureModeEnabled || person.hand_raised);
+
+      if (shouldShowSpeakModal) {
+        setSelectedPersonId(person.id);
+        setShowSpeakModal(true);
+      } else {
+        setSelectedPersonId(person.id);
+        setShowSpeakModal(false);
+      }
     },
-    [setSelectedPersonId]
+    [setSelectedPersonId, lectureModeEnabled, isTeacher, mySessionId]
   );
 
-  if (selectedPerson) {
+
+  const closeSpeakModal = useCallback(() => {
+    setShowSpeakModal(false);
+    setSelectedPersonId(null);
+  }, []);
+
+  const handleGrant = useCallback(() => {
+    if (selectedPersonId) {
+      grantSpeakingPermission(selectedPersonId);
+      closeSpeakModal();
+    }
+  }, [selectedPersonId, grantSpeakingPermission, closeSpeakModal]);
+
+  const handleRevoke = useCallback(() => {
+    if (selectedPersonId) {
+      revokeSpeakingPermission(selectedPersonId);
+      closeSpeakModal();
+    }
+  }, [selectedPersonId, revokeSpeakingPermission, closeSpeakModal]);
+
+  // Show speak permission modal
+  if (showSpeakModal && selectedPerson) {
+    const hasPermission = hasSpeakingPermission(selectedPersonId);
+    return (
+      <SpeakPermissionModal
+        displayName={selectedPerson.profile?.displayName || "User"}
+        hasPermission={hasPermission}
+        handRaised={selectedPerson.hand_raised}
+        onGrant={handleGrant}
+        onRevoke={handleRevoke}
+        onClose={closeSpeakModal}
+      />
+    );
+  }
+
+  if (selectedPerson && !showSpeakModal) {
     if (selectedPerson.id === mySessionId) {
       return (
         <ProfileEntryPanel
@@ -148,3 +221,4 @@ PeopleSidebarContainer.propTypes = {
   onCloseDialog: PropTypes.func.isRequired,
   showNonHistoriedDialog: PropTypes.func.isRequired
 };
+

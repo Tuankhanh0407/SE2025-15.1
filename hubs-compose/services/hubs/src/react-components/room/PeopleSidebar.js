@@ -16,9 +16,11 @@ import { ReactComponent as VolumeMutedIcon } from "../icons/VolumeMuted.svg";
 import { ReactComponent as HandRaisedIcon } from "../icons/HandRaised.svg";
 import { ReactComponent as UserSoundOnIcon } from "../icons/UserSoundOn.svg";
 import { ReactComponent as UserSoundOffIcon } from "../icons/UserSoundOff.svg";
+import { ReactComponent as MicrophoneMutedIcon } from "../icons/MicrophoneMuted.svg";
 import { List, ButtonListItem } from "../layout/List";
 import { FormattedMessage, defineMessage, useIntl } from "react-intl";
 import { PermissionNotification } from "./PermissionNotifications";
+import { useLectureMode } from "./hooks/useLectureMode";
 
 const toolTipDescription = defineMessage({
   id: "people-sidebar.muted-tooltip",
@@ -119,6 +121,8 @@ export function PeopleSidebar({
   isMod
 }) {
   const intl = useIntl();
+  const { lectureModeEnabled, hasSpeakingPermission } = useLectureMode();
+
   const me = people.find(person => !!person.isMe);
   const filteredPeople = people
     .filter(person => !person.isMe)
@@ -151,6 +155,16 @@ export function PeopleSidebar({
         ) : undefined
       }
     >
+      {/* Lecture Mode indicator */}
+      {lectureModeEnabled && (
+        <div className={styles.lectureModeIndicator}>
+          <MicrophoneMutedIcon width={16} height={16} />
+          <FormattedMessage
+            id="people-sidebar.lecture-mode-active"
+            defaultMessage="Lecture Mode Active - Click on a student to manage speaking permission"
+          />
+        </div>
+      )}
       {!canVoiceChat && <PermissionNotification permission={"voice_chat"} />}
       {!voiceChatEnabled && isMod && <PermissionNotification permission={"voice_chat"} isMod={true} />}
       <List>
@@ -158,6 +172,8 @@ export function PeopleSidebar({
           filteredPeople.map(person => {
             const DeviceIcon = getDeviceIconComponent(person.context);
             const VoiceIcon = getVoiceIconComponent(person.micPresence);
+            const personIsTeacher = isPersonTeacher(person);
+            const personHasSpeakingPermission = hasSpeakingPermission(person.id);
 
             return (
               <ButtonListItem
@@ -185,7 +201,7 @@ export function PeopleSidebar({
                   </ToolTip>
                 )}
                 <p>{getPersonName(person, intl)}</p>
-                {isPersonTeacher(person) ? (
+                {personIsTeacher ? (
                   <span className={styles.roleBadge} title="Teacher">🎓</span>
                 ) : (
                   <span className={styles.roleBadgeStudent} title="Student">📚</span>
@@ -197,6 +213,10 @@ export function PeopleSidebar({
                     width={12}
                     height={12}
                   />
+                )}
+                {/* Show indicator if student has speaking permission */}
+                {lectureModeEnabled && !personIsTeacher && personHasSpeakingPermission && (
+                  <span className={styles.canSpeakBadge} title="Can Speak">🎤</span>
                 )}
                 <p className={styles.presence}>{getPresenceMessage(person.presence, intl)}</p>
               </ButtonListItem>
@@ -223,3 +243,5 @@ PeopleSidebar.defaultProps = {
   onSelectPerson: () => { },
   isMod: false
 };
+
+

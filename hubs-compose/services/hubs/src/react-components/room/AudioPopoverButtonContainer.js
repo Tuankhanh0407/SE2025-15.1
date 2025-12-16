@@ -10,11 +10,13 @@ import { useCan } from "./hooks/useCan";
 import { PermissionStatus } from "../../utils/media-devices-utils";
 import { AudioPopoverContentContainer } from "./AudioPopoverContentContainer";
 import { ToolTip } from "@mozilla/lilypad-ui";
+import { useLectureMode } from "./hooks/useLectureMode";
 
 export const AudioPopoverButtonContainer = ({ scene, initiallyVisible }) => {
   const { isMicMuted, toggleMute, permissionStatus } = useMicrophoneStatus(scene);
   const micPermissionDenied = permissionStatus === PermissionStatus.DENIED;
   const canVoiceChat = useCan("voice_chat");
+  const { lectureModeEnabled, canSpeak } = useLectureMode();
   const intl = useIntl();
 
   const muteStatuses = defineMessages({
@@ -28,13 +30,36 @@ export const AudioPopoverButtonContainer = ({ scene, initiallyVisible }) => {
     }
   });
 
-  const description = intl.formatMessage(
-    {
-      id: "mute-tooltip.description",
-      defaultMessage: "{muteStatus} Microphone (M)"
-    },
-    { muteStatus: intl.formatMessage(muteStatuses[isMicMuted ? "unmute" : "mute"]) }
-  );
+  // Check if user is blocked by lecture mode
+  const blockedByLectureMode = lectureModeEnabled && !canSpeak;
+
+  // Determine if the button should be disabled
+  const isDisabled = !canVoiceChat || micPermissionDenied || blockedByLectureMode;
+
+  // Custom description for lecture mode
+  let description;
+  if (blockedByLectureMode) {
+    description = intl.formatMessage({
+      id: "mute-tooltip.lecture-mode",
+      defaultMessage: "Raise hand to request permission to speak"
+    });
+  } else {
+    description = intl.formatMessage(
+      {
+        id: "mute-tooltip.description",
+        defaultMessage: "{muteStatus} Microphone (M)"
+      },
+      { muteStatus: intl.formatMessage(muteStatuses[isMicMuted ? "unmute" : "mute"]) }
+    );
+  }
+
+  // Handle toggle - only allow if not blocked by lecture mode
+  const handleToggleMute = () => {
+    if (blockedByLectureMode) {
+      return; // Don't allow unmuting when blocked
+    }
+    toggleMute();
+  };
 
   return (
     <AudioPopoverButton
@@ -44,17 +69,23 @@ export const AudioPopoverButtonContainer = ({ scene, initiallyVisible }) => {
         <ToolTip description={description}>
           <ToolbarMicButton
             scene={scene}
-            icon={isMicMuted || !canVoiceChat || micPermissionDenied ? <MicrophoneMutedIcon /> : <MicrophoneIcon />}
-            label={<FormattedMessage id="voice-button-container.label" defaultMessage="Voice" />}
+            icon={isMicMuted || !canVoiceChat || micPermissionDenied || blockedByLectureMode ? <MicrophoneMutedIcon /> : <MicrophoneIcon />}
+            label={
+              blockedByLectureMode ? (
+                <FormattedMessage id="voice-button-container.lecture-mode" defaultMessage="Raise Hand" />
+              ) : (
+                <FormattedMessage id="voice-button-container.label" defaultMessage="Voice" />
+              )
+            }
             preset="basic"
-            onClick={toggleMute}
-            statusColor={!micPermissionDenied && canVoiceChat ? (isMicMuted ? "disabled" : "enabled") : undefined}
+            onClick={handleToggleMute}
+            statusColor={!isDisabled ? (isMicMuted ? "disabled" : "enabled") : undefined}
             type={"right"}
-            disabled={!canVoiceChat || micPermissionDenied}
+            disabled={isDisabled}
           />
         </ToolTip>
       }
-      onChangeMicrophoneMuted={toggleMute}
+      onChangeMicrophoneMuted={handleToggleMute}
     />
   );
 };
@@ -63,3 +94,4 @@ AudioPopoverButtonContainer.propTypes = {
   scene: PropTypes.object.isRequired,
   initiallyVisible: PropTypes.bool
 };
+

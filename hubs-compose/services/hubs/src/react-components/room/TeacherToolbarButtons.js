@@ -5,9 +5,10 @@ import { ReactComponent as CameraIcon } from "../icons/Camera.svg";
 import { ReactComponent as PeopleIcon } from "../icons/People.svg";
 import { FormattedMessage } from "react-intl";
 import { useTeacherRole } from "./hooks/useTeacherRole";
+import { LectureModeToggle } from "./LectureModeToggle";
 
 /**
- * Teacher-only toolbar buttons for Whiteboard and Attendance.
+ * Teacher-only toolbar buttons for Whiteboard, Attendance, and Lecture Mode.
  * These buttons are hidden for students.
  */
 export function TeacherToolbarButtons({
@@ -25,6 +26,7 @@ export function TeacherToolbarButtons({
 
     return (
         <>
+            <LectureModeToggle />
             <ToolbarButton
                 icon={<CameraIcon />}
                 preset="accent5"
@@ -51,3 +53,4 @@ TeacherToolbarButtons.propTypes = {
 };
 
 export default TeacherToolbarButtons;
+

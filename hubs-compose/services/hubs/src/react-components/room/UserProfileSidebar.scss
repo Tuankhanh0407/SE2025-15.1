@@ -7,7 +7,7 @@
   align-items: center;
 
   /* TODO: This styling into AvatarPreview */
-  & > :first-child {
+  &> :first-child {
     width: 168px;
     height: 300px;
     min-height: 300px;
@@ -32,4 +32,35 @@
 
 :local(.pronouns) {
   color: theme.$text2-color;
+}
+
+:local(.speak-permission-section) {
+  width: 100%;
+  padding: 16px;
+  margin: 16px 0;
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.1) 0%, rgba(52, 152, 219, 0.1) 100%);
+  border-radius: 12px;
+  border: 2px solid rgba(46, 204, 113, 0.3);
+  text-align: center;
+}
+
+:local(.speak-permission-label) {
+  font-size: theme.$font-size-sm;
+  font-weight: 600;
+  color: theme.$text1-color;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+:local(.speak-button) {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  font-weight: 600;
+
+  svg {
+    flex-shrink: 0;
+  }
 }

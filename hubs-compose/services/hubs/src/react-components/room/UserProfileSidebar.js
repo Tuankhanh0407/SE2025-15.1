@@ -11,8 +11,11 @@ import { Slider } from "../input/Slider";
 import { ToolbarButton } from "../input/ToolbarButton";
 import { ReactComponent as VolumeHigh } from "../icons/VolumeHigh.svg";
 import { ReactComponent as VolumeMuted } from "../icons/VolumeMuted.svg";
+import { ReactComponent as MicrophoneIcon } from "../icons/Microphone.svg";
+import { ReactComponent as MicrophoneMutedIcon } from "../icons/MicrophoneMuted.svg";
 import useAvatarVolume from "./hooks/useAvatarVolume";
 import { calcLevel, calcGainMultiplier, MAX_VOLUME_LABELS } from "../../utils/avatar-volume-utils";
+import { useLectureMode } from "./hooks/useLectureMode";
 
 const MIN = 0;
 const MAX = MAX_VOLUME_LABELS - 1;
@@ -40,10 +43,19 @@ export function UserProfileSidebar({
   showBackButton,
   onBack,
   onClose,
+  isUserTeacher,
   ...rest
 }) {
   const intl = useIntl();
   const [multiplier, updateMultiplier, isMuted, updateMuted] = useAvatarVolume(userId);
+  const {
+    lectureModeEnabled,
+    isTeacher,
+    hasSpeakingPermission,
+    grantSpeakingPermission,
+    revokeSpeakingPermission
+  } = useLectureMode();
+
   const onLevelChanged = useCallback(
     level => {
       updateMultiplier(calcGainMultiplier(level));
@@ -51,6 +63,23 @@ export function UserProfileSidebar({
     [updateMultiplier]
   );
   const newLevel = calcLevel(multiplier);
+
+  // Check if this user has speaking permission
+  const userHasSpeakingPermission = hasSpeakingPermission(userId);
+
+  // Show speak controls only if:
+  // - Lecture mode is on
+  // - Current user is a teacher
+  // - The viewed user is NOT a teacher
+  const showSpeakControls = lectureModeEnabled && isTeacher && !isUserTeacher;
+
+  const handleGrantSpeak = useCallback(() => {
+    grantSpeakingPermission(userId);
+  }, [grantSpeakingPermission, userId]);
+
+  const handleRevokeSpeak = useCallback(() => {
+    revokeSpeakingPermission(userId);
+  }, [revokeSpeakingPermission, userId]);
 
   return (
     <Sidebar
@@ -62,6 +91,44 @@ export function UserProfileSidebar({
         <h2 className={styles.displayName}>{identityName ? `${displayName} (${identityName})` : displayName}</h2>
         {pronouns && <span className={styles.pronouns}>{pronouns}</span>}
         <div className={styles.avatarPreviewContainer}>{avatarPreview || <div />}</div>
+
+        {/* Lecture Mode Speaking Permission Controls */}
+        {showSpeakControls && (
+          <div className={styles.speakPermissionSection}>
+            <p className={styles.speakPermissionLabel}>
+              <FormattedMessage
+                id="user-profile-sidebar.lecture-mode-label"
+                defaultMessage="Lecture Mode Speaking Permission"
+              />
+            </p>
+            {userHasSpeakingPermission ? (
+              <Button
+                preset="cancel"
+                onClick={handleRevokeSpeak}
+                className={styles.speakButton}
+              >
+                <MicrophoneMutedIcon width={18} height={18} style={{ marginRight: 8 }} />
+                <FormattedMessage
+                  id="user-profile-sidebar.revoke-speak-button"
+                  defaultMessage="Revoke Speaking Permission"
+                />
+              </Button>
+            ) : (
+              <Button
+                preset="accept"
+                onClick={handleGrantSpeak}
+                className={styles.speakButton}
+              >
+                <MicrophoneIcon width={18} height={18} style={{ marginRight: 8 }} />
+                <FormattedMessage
+                  id="user-profile-sidebar.grant-speak-button"
+                  defaultMessage="Grant Speaking Permission"
+                />
+              </Button>
+            )}
+          </div>
+        )}
+
         {hasMicPresence && (
           <div className={styles.sliderContainer}>
             <ToolbarButton
@@ -169,5 +236,7 @@ UserProfileSidebar.propTypes = {
   onKick: PropTypes.func,
   showBackButton: PropTypes.bool,
   onBack: PropTypes.func,
-  onClose: PropTypes.func
+  onClose: PropTypes.func,
+  isUserTeacher: PropTypes.bool
 };
+
