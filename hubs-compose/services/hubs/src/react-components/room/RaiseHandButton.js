@@ -2,9 +2,12 @@ import React, { useCallback, useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { ToolbarButton } from "../input/ToolbarButton";
 import { ReactComponent as HandRaisedIcon } from "../icons/HandRaised.svg";
+import { ReactComponent as MicrophoneIcon } from "../icons/Microphone.svg";
 import { defineMessage, useIntl } from "react-intl";
 import { ToolTip } from "@mozilla/lilypad-ui";
 import { SOUND_CAMERA_TOOL_TOOK_SNAPSHOT } from "../../systems/sound-effects-system";
+import { useTeacherRole } from "./hooks/useTeacherRole";
+import { useLectureMode } from "./hooks/useLectureMode";
 
 const raiseHandLabel = defineMessage({
     id: "toolbar.raise-hand",
@@ -14,6 +17,16 @@ const raiseHandLabel = defineMessage({
 const lowerHandLabel = defineMessage({
     id: "toolbar.lower-hand",
     defaultMessage: "Lower Hand"
+});
+
+const requestSpeakLabel = defineMessage({
+    id: "toolbar.request-speak",
+    defaultMessage: "Speak"
+});
+
+const canSpeakLabel = defineMessage({
+    id: "toolbar.can-speak",
+    defaultMessage: "Speaking"
 });
 
 function usePresence(scene, initialPresence) {
@@ -34,6 +47,8 @@ export function RaiseHandButton({ scene, initialPresence }) {
     const intl = useIntl();
     const presence = usePresence(scene, initialPresence);
     const handRaised = presence?.hand_raised;
+    const { isTeacher } = useTeacherRole();
+    const { lectureModeEnabled, canSpeak } = useLectureMode();
 
     const onToggleHandRaised = useCallback(() => {
         if (handRaised) {
@@ -45,7 +60,36 @@ export function RaiseHandButton({ scene, initialPresence }) {
         }
     }, [handRaised, scene]);
 
-    const label = intl.formatMessage(handRaised ? lowerHandLabel : raiseHandLabel);
+    // Teachers don't need the raise hand feature
+    if (isTeacher) {
+        return null;
+    }
+
+    // In lecture mode with speaking permission, show a different indicator
+    if (lectureModeEnabled && canSpeak) {
+        const speakingLabel = intl.formatMessage(canSpeakLabel);
+        return (
+            <ToolTip description={speakingLabel}>
+                <ToolbarButton
+                    icon={<MicrophoneIcon />}
+                    label={speakingLabel}
+                    preset="accept"
+                    selected={true}
+                    onClick={() => { }} // No action needed
+                />
+            </ToolTip>
+        );
+    }
+
+    // In lecture mode without permission, emphasize the "Request to Speak" action
+    let label;
+    if (lectureModeEnabled && !canSpeak) {
+        label = handRaised
+            ? intl.formatMessage(lowerHandLabel)
+            : intl.formatMessage(requestSpeakLabel);
+    } else {
+        label = intl.formatMessage(handRaised ? lowerHandLabel : raiseHandLabel);
+    }
 
     return (
         <ToolTip description={label}>
@@ -53,7 +97,7 @@ export function RaiseHandButton({ scene, initialPresence }) {
                 icon={<HandRaisedIcon />}
                 onClick={onToggleHandRaised}
                 label={label}
-                preset={handRaised ? "accent1" : "basic"}
+                preset={handRaised ? "accent1" : (lectureModeEnabled ? "accent3" : "basic")}
                 selected={handRaised}
             />
         </ToolTip>
@@ -64,3 +108,4 @@ RaiseHandButton.propTypes = {
     scene: PropTypes.object.isRequired,
     initialPresence: PropTypes.object
 };
+
