@@ -55,6 +55,8 @@ import { WhiteboardSidebar } from "./room/WhiteboardSidebar";
 import { AttendanceSidebar } from "./room/AttendanceSidebar";
 import { TeacherToolbarButtons } from "./room/TeacherToolbarButtons";
 import { HandRaiseNotification } from "./room/HandRaiseNotification";
+import { ShareToStudentsButton } from "./room/ShareToStudentsButton";
+import { StudentFocusLock } from "./room/StudentFocusLock";
 import { ContentMenu, PeopleMenuButton, ObjectsMenuButton, ECSDebugMenuButton } from "./room/ContentMenu";
 import { ReactComponent as CameraIcon } from "./icons/Camera.svg";
 import { ReactComponent as AvatarIcon } from "./icons/Avatar.svg";
@@ -1609,6 +1611,8 @@ class UIRoot extends Component {
                       onClose={() => this.setState({ showAttendance: false })}
                     />
                     <HandRaiseNotification />
+                    <ShareToStudentsButton scene={this.props.scene} />
+                    <StudentFocusLock />
                   </>
                 }
                 toolbarLeft={
