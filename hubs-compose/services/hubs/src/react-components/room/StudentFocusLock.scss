@@ -1,0 +1,65 @@
+@use "../styles/theme.scss";
+
+:local(.focusLockOverlay) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 999;
+}
+
+:local(.focusLockBadge) {
+    position: fixed;
+    top: 80px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.95), rgba(25, 118, 210, 0.95));
+    color: white;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 4px 20px rgba(33, 150, 243, 0.4);
+    animation: slideIn 0.3s ease-out;
+    pointer-events: auto;
+}
+
+:local(.eyeIcon) {
+    font-size: 18px;
+}
+
+:local(.returnButton) {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    padding: 6px 14px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    border-radius: 20px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    min-height: unset !important;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.35) !important;
+        transform: scale(1.02);
+    }
+
+    &:active {
+        transform: scale(0.98);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}

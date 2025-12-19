@@ -14,10 +14,20 @@ export function useLectureMode() {
     const [speakingPermissions, setSpeakingPermissions] = useState(new Set());
     const speakingPermissionsRef = useRef(speakingPermissions);
 
+    // Focus sharing state
+    const [sharedFocusTarget, setSharedFocusTarget] = useState(null); // Entity ID of shared object
+    const [isFocusLocked, setIsFocusLocked] = useState(false); // Whether student view is locked
+
     // Keep ref in sync
     useEffect(() => {
         speakingPermissionsRef.current = speakingPermissions;
     }, [speakingPermissions]);
+
+    // Sync focus lock state to global so camera system can check it
+    useEffect(() => {
+        if (!window.APP) window.APP = {};
+        window.APP.isFocusLocked = isFocusLocked;
+    }, [isFocusLocked]);
 
     // Listen for lecture mode messages
     useEffect(() => {
@@ -77,6 +87,48 @@ export function useLectureMode() {
                             message: `🔇 Your speaking permission has been revoked.`
                         });
                     }
+                }
+            }
+
+            // Handle focus share (teacher shares an object with students)
+            if (message.type === "focus_share") {
+                const networkId = message.body?.networkId;
+                const objectName = message.body?.objectName || "shared content";
+
+                if (networkId) {
+                    setSharedFocusTarget(networkId);
+
+                    // Only show notification for non-teachers (students)
+                    const presence = APP.hubChannel?.presence?.state?.[NAF.clientId];
+                    const meta = presence?.metas?.[0];
+                    const isCurrentUserTeacher = meta?.profile?.isTeacher || meta?.roles?.owner || meta?.roles?.creator;
+
+                    if (!isCurrentUserTeacher) {
+                        setIsFocusLocked(true);
+
+                        // Show notification
+                        scene?.emit("chat_notification", {
+                            message: `👁️ Teacher is sharing: ${objectName}`
+                        });
+                    }
+                }
+            }
+
+            // Handle focus release (teacher stops sharing)
+            if (message.type === "focus_release") {
+                setSharedFocusTarget(null);
+                setIsFocusLocked(false);
+
+                // Show notification for non-teachers
+                const presence = APP.hubChannel?.presence?.state?.[NAF.clientId];
+                const meta = presence?.metas?.[0];
+                const isCurrentUserTeacher = meta?.profile?.isTeacher || meta?.roles?.owner || meta?.roles?.creator;
+
+                if (!isCurrentUserTeacher) {
+                    // Show notification
+                    scene?.emit("chat_notification", {
+                        message: `👁️ Teacher stopped sharing`
+                    });
                 }
             }
         };
@@ -179,11 +231,55 @@ export function useLectureMode() {
         return speakingPermissions.has(sessionId);
     }, [speakingPermissions]);
 
+    // Share focus to students (teacher only) - shares object network ID so students can inspect same object
+    const shareFocusToStudents = useCallback((networkId, objectName = "shared content") => {
+        if (!isTeacher || !lectureModeEnabled) return;
+
+        setSharedFocusTarget(networkId);
+
+        // Broadcast to all users
+        if (window.APP?.hubChannel) {
+            window.APP.hubChannel.sendMessage(
+                { networkId, objectName },
+                "focus_share"
+            );
+        }
+
+        // Show notification to teacher
+        const scene = AFRAME.scenes[0];
+        scene?.emit("chat_notification", {
+            message: `👁️ Sharing "${objectName}" with students`
+        });
+    }, [isTeacher, lectureModeEnabled]);
+
+    // Release shared focus (teacher only) - allows students to look around freely
+    const releaseFocusShare = useCallback(() => {
+        if (!isTeacher) return;
+
+        setSharedFocusTarget(null);
+
+        // Broadcast to all users
+        if (window.APP?.hubChannel) {
+            window.APP.hubChannel.sendMessage(
+                {},
+                "focus_release"
+            );
+        }
+
+        // Show notification to teacher
+        const scene = AFRAME.scenes[0];
+        scene?.emit("chat_notification", {
+            message: `👁️ Stopped sharing with students`
+        });
+    }, [isTeacher]);
+
     return {
         // State
         lectureModeEnabled,
         canSpeak,
         speakingPermissions,
+        sharedFocusTarget,
+        isFocusLocked,
 
         // Teacher controls
         toggleLectureMode,
@@ -191,6 +287,8 @@ export function useLectureMode() {
         disableLectureMode,
         grantSpeakingPermission,
         revokeSpeakingPermission,
+        shareFocusToStudents,
+        releaseFocusShare,
 
         // Utilities
         hasSpeakingPermission,
