@@ -40,6 +40,16 @@ export function StudentFocusLock() {
                 setSharedNetworkId(null);
                 setIsSharing(false);
             }
+
+            // Handle late joiner state sync
+            if (message.type === "lecture_state_response") {
+                const { sharedNetworkId: networkId } = message.body || {};
+                if (networkId) {
+                    setSharedNetworkId(networkId);
+                    setObjectName("shared content");
+                    setIsSharing(true);
+                }
+            }
         };
 
         messageDispatch.addEventListener("message", onMessage);

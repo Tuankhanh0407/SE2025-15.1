@@ -371,71 +371,6 @@ export class CameraSystem {
     }
   }
 
-  // Inspect at a world position without needing an entity
-  // Used for teacher-shared content viewing
-  inspectAtPosition(worldPosition, distanceMod = 1.5, fireChangeEvent = true) {
-    this.verticalDelta = 0;
-    this.horizontalDelta = 0;
-    this.inspectZoom = 0;
-
-    if (this.mode === CAMERA_MODE_INSPECT) {
-      return;
-    }
-
-    const scene = AFRAME.scenes[0];
-
-    // Create a temporary pivot object at the target position
-    if (!this._positionInspectPivot) {
-      this._positionInspectPivot = new THREE.Object3D();
-      this._positionInspectPivot.name = "PositionInspectPivot";
-      scene.object3D.add(this._positionInspectPivot);
-    }
-
-    // Position the pivot at the shared location
-    this._positionInspectPivot.position.set(worldPosition.x, worldPosition.y, worldPosition.z);
-    this._positionInspectPivot.updateMatrixWorld(true);
-
-    scene.object3D.traverse(ensureLightsAreSeenByCamera);
-    scene.classList.add("hand-cursor");
-    scene.classList.remove("no-cursor");
-    this.snapshot.mode = this.mode;
-    this.mode = CAMERA_MODE_INSPECT;
-    this.inspectable = this._positionInspectPivot;
-    this.pivot = this._positionInspectPivot;
-
-    const camera = scene.is("vr-mode") ? scene.renderer.xr.getCamera() : scene.camera;
-    this.snapshot.mask = camera.layers.mask;
-
-    // Show lights/background since there's no specific object to focus on
-    camera.layers.disable(Layers.CAMERA_LAYER_FIRST_PERSON_ONLY);
-    camera.layers.enable(Layers.CAMERA_LAYER_THIRD_PERSON_ONLY);
-
-    this.viewingCamera.updateMatrices();
-    this.snapshot.matrixWorld.copy(this.viewingRig.object3D.matrixWorld);
-    this.snapshot.audio = null;
-
-    this.ensureListenerIsParentedCorrectly(scene);
-
-    // Position camera to look at the pivot
-    const rigPos = this.viewingRig.object3D.position.clone();
-    const targetPos = this._positionInspectPivot.position.clone();
-    const distance = rigPos.distanceTo(targetPos);
-    const viewDist = Math.max(distance * 0.8, 2) * distanceMod;
-
-    // Calculate camera position at a distance from the target
-    const direction = new THREE.Vector3().subVectors(rigPos, targetPos).normalize();
-    const cameraPos = targetPos.clone().add(direction.multiplyScalar(viewDist));
-    cameraPos.y = Math.max(cameraPos.y, targetPos.y + 0.5); // Slightly above
-
-    this.viewingRig.object3D.position.copy(cameraPos);
-    this.viewingCamera.lookAt(targetPos);
-    this.viewingRig.object3D.updateMatrixWorld(true);
-
-    if (fireChangeEvent) {
-      scene.emit("inspect-target-changed");
-    }
-  }
-
   toggleLights() {
     this.lightsEnabled = !this.lightsEnabled;
     localStorage.setItem("show-background-while-inspecting", this.lightsEnabled.toString());
@@ -542,13 +477,6 @@ export class CameraSystem {
           }
         }
       } else if (this.mode === CAMERA_MODE_INSPECT && this.userinput.get(paths.actions.stopInspecting)) {
-        // Check if focus is locked by teacher sharing content
-        const isFocusLocked = window.APP?.isFocusLocked;
-        if (isFocusLocked) {
-          // Prevent exiting inspect mode when focus is locked
-          return;
-        }
-
         scene.emit("uninspect");
         if (shouldUseNewLoader()) {
           const inspected = anyEntityWith(APP.world, Inspected);

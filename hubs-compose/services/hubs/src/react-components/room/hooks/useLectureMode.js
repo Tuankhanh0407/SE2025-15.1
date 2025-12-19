@@ -18,10 +18,22 @@ export function useLectureMode() {
     const [sharedFocusTarget, setSharedFocusTarget] = useState(null); // Entity ID of shared object
     const [isFocusLocked, setIsFocusLocked] = useState(false); // Whether student view is locked
 
-    // Keep ref in sync
+    // Refs to access current values inside message handlers
+    const lectureModeEnabledRef = useRef(lectureModeEnabled);
+    const sharedFocusTargetRef = useRef(sharedFocusTarget);
+
+    // Keep refs in sync
     useEffect(() => {
         speakingPermissionsRef.current = speakingPermissions;
     }, [speakingPermissions]);
+
+    useEffect(() => {
+        lectureModeEnabledRef.current = lectureModeEnabled;
+    }, [lectureModeEnabled]);
+
+    useEffect(() => {
+        sharedFocusTargetRef.current = sharedFocusTarget;
+    }, [sharedFocusTarget]);
 
     // Sync focus lock state to global so camera system can check it
     useEffect(() => {
@@ -131,9 +143,60 @@ export function useLectureMode() {
                     });
                 }
             }
+
+            // Handle state request from late joiners (teacher responds with current state)
+            if (message.type === "lecture_state_request") {
+                const presence = APP.hubChannel?.presence?.state?.[NAF.clientId];
+                const meta = presence?.metas?.[0];
+                const isCurrentUserTeacher = meta?.profile?.isTeacher || meta?.roles?.owner || meta?.roles?.creator;
+
+                if (isCurrentUserTeacher) {
+                    // Teacher broadcasts current state using refs for current values
+                    setTimeout(() => {
+                        if (window.APP?.hubChannel) {
+                            window.APP.hubChannel.sendMessage(
+                                {
+                                    enabled: lectureModeEnabledRef.current,
+                                    sharedNetworkId: sharedFocusTargetRef.current
+                                },
+                                "lecture_state_response"
+                            );
+                        }
+                    }, 500); // Small delay to ensure new user is ready
+                }
+            }
+
+            // Handle state response (late joiner receives current state)
+            if (message.type === "lecture_state_response") {
+                const { enabled, sharedNetworkId } = message.body || {};
+
+                if (enabled !== undefined) {
+                    setLectureModeEnabled(enabled);
+                }
+
+                if (sharedNetworkId) {
+                    setSharedFocusTarget(sharedNetworkId);
+
+                    // Check if we are a student
+                    const presence = APP.hubChannel?.presence?.state?.[NAF.clientId];
+                    const meta = presence?.metas?.[0];
+                    const isCurrentUserTeacher = meta?.profile?.isTeacher || meta?.roles?.owner || meta?.roles?.creator;
+
+                    if (!isCurrentUserTeacher) {
+                        setIsFocusLocked(true);
+                    }
+                }
+            }
         };
 
         messageDispatch.addEventListener("message", onMessage);
+
+        // Request current state when joining (for late joiners)
+        setTimeout(() => {
+            if (window.APP?.hubChannel) {
+                window.APP.hubChannel.sendMessage({}, "lecture_state_request");
+            }
+        }, 500); // Wait 500ms after joining to request state (faster muting)
 
         return () => {
             messageDispatch.removeEventListener("message", onMessage);
