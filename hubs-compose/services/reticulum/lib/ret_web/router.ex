@@ -239,6 +239,9 @@ defmodule RetWeb.Router do
                    if(secure?, do: [:ssl_only, :canonicalize_domain], else: [])
 
     get "/link", PageController, only: [:index]
+    get "/confirm-signin", ConfirmSigninController, :index
+    post "/confirm-signin/accept", ConfirmSigninController, :accept
+    post "/confirm-signin/deny", ConfirmSigninController, :deny
   end
 
   scope "/", RetWeb do

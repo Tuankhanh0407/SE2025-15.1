@@ -117,13 +117,9 @@ means visiting these links in your web browser and following the prompts:
 1. Go to [Reticulum](https://hubs.local:4000) and click the sign in/up button.
 2. Enter an email address (it doesn't have to be real) that you'll remember (or write it down somewhere after).
     - Note: this will be the email address used for your admin account.
-3. View the logs for the Reticulum container:  `docker compose logs reticulum ` (add `-f` if you want a live update)
-4. Copy the magic verification link and open it in a new tab on your browser.
+3. Open Mailpit in your browser: https://hubs.local:8025
+4. Find the email and open the magic verification link in a new tab on your browser.
     - Note: it must be the same browser as your other Hubs Compose tabs are in.
-
-Example Reticulum log entry for the magic link email:
-
-`%Bamboo.Email{from: {nil, "info@hubs-mail.com"}, to: [nil: "<your@email.address>"], cc: [], bcc: [], subject: "Your  Sign-In Link", html_body: nil, text_body: "To sign-in to , please visit the link below. If you did not make this request, please ignore this e-mail.\n\n https://hubs.local:4000/?auth_origin=hubs&auth_payload=GPk2GOEbz9AcHROddvD%2F20%2B11FcKH%2FbKTj62gPCyUgjpeogFp94zpQoBh9nrBiY%2F16KYiGka0dseW9mDlN7n&auth_token=ca3ff98f63c4b7709d0b1c01a217f414&auth_topic=auth%3Add0ec69c-bfa2-4994-b183-aca1377b2f11", headers: %{}, attachments: [], assigns: %{}, private: %{}}`
 
 ### Admin panel access
 

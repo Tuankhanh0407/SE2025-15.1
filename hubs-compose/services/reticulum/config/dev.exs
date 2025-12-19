@@ -161,7 +161,21 @@ config :ret, RetWeb.Plugs.AddCSP,
   media_src: asset_hosts,
   manifest_src: asset_hosts
 
-config :ret, Ret.Mailer, adapter: Bamboo.LocalAdapter
+smtp_host = System.get_env("SMTP_HOST") || "mailpit"
+smtp_port = String.to_integer(System.get_env("SMTP_PORT") || "1025")
+smtp_username = System.get_env("SMTP_USERNAME")
+smtp_password = System.get_env("SMTP_PASSWORD")
+
+config :ret, Ret.Mailer,
+  adapter: Bamboo.SMTPAdapter,
+  server: smtp_host,
+  port: smtp_port,
+  tls: :never,
+  ssl: false,
+  auth: (if smtp_username && smtp_password, do: :always, else: :never),
+  username: smtp_username,
+  password: smtp_password,
+  retries: 1
 
 config :ret, RetWeb.Email, from: "info@hubs-mail.com"
 
