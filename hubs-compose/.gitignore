@@ -1,1 +1,5 @@
 .env
+*.tar.gz
+*.bak
+/services/reticulum/deps
+node_modules/
