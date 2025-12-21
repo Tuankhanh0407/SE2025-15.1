@@ -11,6 +11,21 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+  mailpit:
+    image: axllent/mailpit:v1.20
+    ports:
+      - "1025:1025"
+  mailpit-https:
+    image: nginx:1.27-alpine
+    depends_on:
+      - mailpit
+    ports:
+      - "8025:8025"
+    volumes:
+      - ./services/reticulum/priv/dev-ssl.cert:/etc/ssl/certs/hubs.local.pem:ro
+      - ./services/reticulum/priv/dev-ssl.key:/etc/ssl/private/hubs.local.key:ro
+      - ./mailpit-https/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./mailpit-https/hubs-inject.js:/usr/share/nginx/html/hubs-inject.js:ro
   dialog:
     build:
       context: .
@@ -20,16 +35,16 @@ services:
       HTTPS_CERT_FULLCHAIN: /etc/ssl/fullchain.pem
       HTTPS_CERT_PRIVKEY: /etc/ssl/privkey.pem
       INTERACTIVE: "false"
-      MEDIASOUP_MIN_PORT: 40000
-      MEDIASOUP_MAX_PORT: 40050
+      MEDIASOUP_MIN_PORT: 41000
+      MEDIASOUP_MAX_PORT: 41050
       MEDIASOUP_ANNOUNCED_IP: ${PRIVATE_NETWORK_IP}
     ports:
       - "4443:4443"
       # This should be the same as MEDIASOUP_MIN_PORT and MEDIASOUP_MAX_PORT
       # You might neeed to increase this number depending on how many clients you are connecting.
       # (Keep the ports range small to improve container startup time)
-      - "40000-40050:40000-40050"
-      - "40000-40050:40000-40050/udp"
+      - "41000-41050:41000-41050"
+      - "41000-41050:41000-41050/udp"
     volumes:
       - dialog:/code
     working_dir: /code
@@ -88,6 +103,12 @@ services:
       target: dev
     depends_on:
       - db
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --no-check-certificate --spider https://127.0.0.1:4000/stream-offline.png"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
     environment:
       DB_CREDENTIALS: postgres
       DB_HOST: db
@@ -97,6 +118,8 @@ services:
       HUBS_CLIENT_INTERNAL_HOSTNAME: hubs-client
       POSTGREST_INTERNAL_HOSTNAME: postgrest
       SPOKE_INTERNAL_HOSTNAME: spoke
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
     ports:
       - "4000:4000"
     volumes:

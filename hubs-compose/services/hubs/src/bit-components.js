@@ -58,6 +58,7 @@ export const PointLightTag = defineComponent();
 export const SpotLightTag = defineComponent();
 export const CursorRaycastable = defineComponent();
 export const RemoteHoverTarget = defineComponent();
+export const ChairSeat = defineComponent();
 export const NotRemoteHoverTarget = defineComponent();
 export const Holdable = defineComponent();
 export const RemoveNetworkedEntityButton = defineComponent();

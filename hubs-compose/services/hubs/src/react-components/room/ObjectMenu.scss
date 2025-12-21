@@ -26,8 +26,7 @@
 :local(.object-menu-container) {
   position: absolute;
   bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 16px;
   display: flex;
   flex-direction: column;
   pointer-events: auto;
@@ -106,6 +105,7 @@
 }
 
 :global(.keyboard-user) {
+
   :local(.back-button):focus,
   :local(.object-menu-container) :focus {
     box-shadow: 0 0 0 3px theme.$white;
