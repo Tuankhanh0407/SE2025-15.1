@@ -10,18 +10,21 @@ import { useState, useEffect, useCallback } from "react";
  * @returns {Object} { isTeacher, isStudent, setAsTeacher, setAsStudent }
  */
 export function useTeacherRole(clientId = null) {
-    const scene = AFRAME.scenes[0];
-    const checkClientId = clientId || NAF.clientId;
-    const isCurrentUser = !clientId || clientId === NAF.clientId;
+    const scene = typeof AFRAME !== 'undefined' && AFRAME.scenes ? AFRAME.scenes[0] : null;
+    const nafClientId = typeof NAF !== 'undefined' ? NAF.clientId : null;
+    const checkClientId = clientId || nafClientId;
+    const isCurrentUser = !clientId || clientId === nafClientId;
 
     // Check if user is owner (owners are always teachers)
     const getIsOwner = useCallback((cid) => {
+        if (typeof APP === 'undefined') return false;
         const presence = APP.hubChannel?.presence?.state?.[cid];
         return presence?.metas?.[0]?.roles?.owner || presence?.metas?.[0]?.roles?.creator;
     }, []);
 
     // Get isTeacher from profile or presence
     const getIsTeacher = useCallback((cid) => {
+        if (typeof APP === 'undefined') return false;
         if (isCurrentUser) {
             // Check local store first
             const profileTeacher = APP.store?.state?.profile?.isTeacher;
@@ -63,6 +66,7 @@ export function useTeacherRole(clientId = null) {
     useEffect(() => {
         if (!isCurrentUser) return;
 
+        if (typeof APP === 'undefined') return;
         const messageDispatch = APP.messageDispatch;
         if (!messageDispatch) return;
 
@@ -70,17 +74,20 @@ export function useTeacherRole(clientId = null) {
             const message = event.detail;
 
             // Check if this is a teacher_role message for us
-            if (message.type === "teacher_role" && message.body?.targetSessionId === NAF.clientId) {
+            const currentClientId = typeof NAF !== 'undefined' ? NAF.clientId : null;
+            if (message.type === "teacher_role" && message.body?.targetSessionId === currentClientId) {
                 const newIsTeacher = message.body.isTeacher;
                 const fromName = message.body.fromName || "Someone";
 
                 // Update our profile
-                APP.store.update({
-                    profile: {
-                        ...APP.store.state.profile,
-                        isTeacher: newIsTeacher
-                    }
-                });
+                if (typeof APP !== 'undefined' && APP.store) {
+                    APP.store.update({
+                        profile: {
+                            ...APP.store.state.profile,
+                            isTeacher: newIsTeacher
+                        }
+                    });
+                }
 
                 setIsTeacherState(newIsTeacher);
 
@@ -111,12 +118,14 @@ export function useTeacherRole(clientId = null) {
     const setAsTeacher = useCallback(() => {
         if (!isCurrentUser) return;
 
-        APP.store.update({
-            profile: {
-                ...APP.store.state.profile,
-                isTeacher: true
-            }
-        });
+        if (typeof APP !== 'undefined' && APP.store) {
+            APP.store.update({
+                profile: {
+                    ...APP.store.state.profile,
+                    isTeacher: true
+                }
+            });
+        }
         setIsTeacherState(true);
     }, [isCurrentUser]);
 
@@ -124,12 +133,14 @@ export function useTeacherRole(clientId = null) {
     const setAsStudent = useCallback(() => {
         if (!isCurrentUser) return;
 
-        APP.store.update({
-            profile: {
-                ...APP.store.state.profile,
-                isTeacher: false
-            }
-        });
+        if (typeof APP !== 'undefined' && APP.store) {
+            APP.store.update({
+                profile: {
+                    ...APP.store.state.profile,
+                    isTeacher: false
+                }
+            });
+        }
         setIsTeacherState(false);
     }, [isCurrentUser]);
 
@@ -146,6 +157,7 @@ export function useTeacherRole(clientId = null) {
  * Check if a specific user is a teacher (non-hook version for use outside components)
  */
 export function isUserTeacher(clientId) {
+    if (typeof APP === 'undefined') return false;
     const presence = APP.hubChannel?.presence?.state?.[clientId];
     if (!presence) return false;
 

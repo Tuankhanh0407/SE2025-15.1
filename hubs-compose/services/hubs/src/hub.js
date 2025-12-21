@@ -179,7 +179,9 @@ import "./systems/listed-media";
 import "./systems/linked-media";
 import "./systems/audio-debug-system";
 import "./systems/audio-gain-system";
+import "./systems/board-projection-system";
 import "./gltf-component-mappings";
+
 
 import { App, getScene } from "./app";
 import MediaDevicesManager from "./utils/media-devices-manager";

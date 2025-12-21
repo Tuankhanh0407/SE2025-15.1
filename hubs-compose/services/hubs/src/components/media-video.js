@@ -559,7 +559,23 @@ AFRAME.registerComponent("media-video", {
       // Set src on video to begin loading.
       if (url.startsWith("hubs://")) {
         const streamClientId = url.substring(7).split("/")[1]; // /clients/<client id>/video is only URL for now
-        const stream = await APP.dialog.getMediaStream(streamClientId, "video");
+        console.log("[media-video] Loading hubs:// stream for client:", streamClientId);
+
+        // Thêm timeout để tránh chờ vô hạn
+        const streamPromise = APP.dialog.getMediaStream(streamClientId, "video");
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("getMediaStream timeout after 10s")), 10000)
+        );
+
+        let stream;
+        try {
+          stream = await Promise.race([streamPromise, timeoutPromise]);
+          console.log("[media-video] Got stream for client:", streamClientId, stream);
+        } catch (e) {
+          console.error("[media-video] Failed to get stream for client:", streamClientId, e);
+          throw e; // Re-throw để trigger error handling
+        }
+
         // We subscribe to video stream notifications for this peer to update the video element
         // This could happen in case there is an ICE failure that requires a transport recreation.
         if (this._onStreamUpdated) {
@@ -568,6 +584,7 @@ AFRAME.registerComponent("media-video", {
         this._onStreamUpdated = async (peerId, kind) => {
           if (peerId === streamClientId && kind === "video") {
             // The video stream for this peer has been updated
+            console.log("[media-video] Stream updated for peer:", peerId);
             const stream = await APP.dialog.getMediaStream(peerId, "video").catch(e => {
               console.error(`Error getting video stream for ${peerId}`, e);
             });
@@ -577,7 +594,10 @@ AFRAME.registerComponent("media-video", {
           }
         };
         APP.dialog.on("stream_updated", this._onStreamUpdated, this);
-        videoEl.srcObject = new MediaStream(stream.getVideoTracks());
+
+        const videoTracks = stream.getVideoTracks();
+        console.log("[media-video] Video tracks:", videoTracks.length, videoTracks);
+        videoEl.srcObject = new MediaStream(videoTracks);
         // If hls.js is supported we always use it as it gives us better events
       } else if (contentType.startsWith("application/dash")) {
         texture.dash = createDashPlayer(url, videoEl, failLoad);
@@ -675,7 +695,7 @@ AFRAME.registerComponent("media-video", {
     this.volumeLabel.object3D.visible =
       this.volumeUpButton.object3D.visible =
       this.volumeDownButton.object3D.visible =
-        this.hasAudioTracks && !this.data.hidePlaybackControls && !!this.video;
+      this.hasAudioTracks && !this.data.hidePlaybackControls && !!this.video;
 
     this.snapButton.object3D.visible =
       !!this.video && !this.data.contentType.startsWith("audio/") && window.APP.hubChannel.can("spawn_and_move_media");
@@ -687,7 +707,7 @@ AFRAME.registerComponent("media-video", {
     this.playPauseButton.object3D.visible =
       this.seekForwardButton.object3D.visible =
       this.seekBackButton.object3D.visible =
-        mayModifyPlayHead;
+      mayModifyPlayHead;
 
     this.linkButton.object3D.visible = !!mediaLoader.mediaOptions.href;
 
