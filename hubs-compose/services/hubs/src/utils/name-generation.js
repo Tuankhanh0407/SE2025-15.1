@@ -662,5 +662,47 @@ export function generateHubName() {
     return s.charAt(0).toUpperCase() + s.slice(1);
   };
 
+  const classroomAdjectives = [
+    "Interactive",
+    "Focused",
+    "Guided",
+    "Practical",
+    "Advanced",
+    "Intro",
+    "Collaborative",
+    "Live",
+    "Recorded",
+    "Morning",
+    "Afternoon",
+    "Evening",
+    "Weekly",
+    "Exam Prep",
+    "Project",
+    "Open"
+  ];
+
+  const classroomNouns = [
+    "Classroom",
+    "Lecture",
+    "Workshop",
+    "Seminar",
+    "Lab",
+    "Study Room",
+    "Office Hours",
+    "Discussion",
+    "Group Session",
+    "Team Project",
+    "Review",
+    "Practice",
+    "Tutoring",
+    "Demo",
+    "Presentation"
+  ];
+
+  const useClassroomTheme = Math.random() < 0.9;
+  if (useClassroomTheme) {
+    return `${randItem(classroomAdjectives)} ${randItem(classroomNouns)}`;
+  }
+
   return `${randItem(adjectives)} ${randItem(adjectives)} ${randItem(nouns)}`;
 }

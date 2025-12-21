@@ -1,13 +1,13 @@
 @use "../styles/theme.scss";
 
-:local(.sign-in-button) {
+:local(.SignInButton) {
     display: none;
     @media(min-width: theme.$breakpoint-lg) {
         display: flex;
       }
 }
 
-:local(.mobile-sign-in) {
+:local(.mobileSignIn) {
     display: flex;
     @media(min-width: theme.$breakpoint-lg) {
         display: none;

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useMemo, useState, useCallback } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import classNames from "classnames";
 import configs from "../../utils/configs";
@@ -20,10 +20,21 @@ import { SignInButton } from "./SignInButton";
 import { AppLogo } from "../misc/AppLogo";
 import { isHmc } from "../../utils/isHmc";
 import maskEmail from "../../utils/mask-email";
+import { TextInputField } from "../input/TextInputField";
+import { Button } from "../input/Button";
 
 export function HomePage() {
   const auth = useContext(AuthContext);
   const intl = useIntl();
+
+  const [joinValue, setJoinValue] = useState("");
+
+  const joinPlaceholder = useMemo(() => {
+    return intl.formatMessage({
+      id: "home-page.join.placeholder",
+      defaultMessage: "Paste class link or enter room code"
+    });
+  }, [intl]);
 
   const { results: favoriteRooms } = useFavoriteRooms();
   const { results: publicRooms } = usePublicRooms();
@@ -31,7 +42,35 @@ export function HomePage() {
   const sortedFavoriteRooms = Array.from(favoriteRooms).sort((a, b) => b.member_count - a.member_count);
   const sortedPublicRooms = Array.from(publicRooms).sort((a, b) => b.member_count - a.member_count);
   const wrapInBold = chunk => <b>{chunk}</b>;
+
+  const onJoinChange = useCallback(e => {
+    setJoinValue(e.target.value);
+  }, []);
+
+  const onJoinSubmit = useCallback(
+    e => {
+      e.preventDefault();
+      const raw = (joinValue || "").trim();
+      if (!raw) return;
+
+      // Accept full URLs, paths, or short room codes.
+      if (/^https?:\/\//i.test(raw)) {
+        window.location = raw;
+        return;
+      }
+
+      if (raw.startsWith("/")) {
+        window.location = raw;
+        return;
+      }
+
+      window.location = `/${raw}`;
+    },
+    [joinValue]
+  );
   useEffect(() => {
+    document.body.classList.add("home-page-scroll-lock");
+
     const qs = new URLSearchParams(location.search);
 
     // Support legacy sign in urls.
@@ -49,6 +88,10 @@ export function HomePage() {
       qs.delete("new");
       createAndRedirectToNewHub(null, null, true, qs);
     }
+
+    return () => {
+      document.body.classList.remove("home-page-scroll-lock");
+    };
   }, []);
 
   const canCreateRooms = !configs.feature("disable_room_creation") || auth.isAdmin;
@@ -78,20 +121,132 @@ export function HomePage() {
           </div>
           <div className={styles.appInfo}>
             <div className={styles.appDescription}>{configs.translation("app-description")}</div>
-            {canCreateRooms && <CreateRoomButton />}
-            <PWAButton />
+
+            <div className={styles.ctaGrid}>
+              <div className={styles.ctaSectionCard}>
+                <div className={styles.ctaSectionHeader}>
+                  <div className={styles.ctaSectionKicker}>
+                    <FormattedMessage id="home-page.cta.student.kicker" defaultMessage="Student" />
+                  </div>
+                  <div className={styles.ctaSectionTitle}>
+                    <FormattedMessage id="home-page.cta.student.title" defaultMessage="Join a class" />
+                  </div>
+                </div>
+
+                <form className={styles.joinCard} onSubmit={onJoinSubmit}>
+                  <div className={styles.joinRow}>
+                    <TextInputField
+                      name="join"
+                      type="text"
+                      value={joinValue}
+                      onChange={onJoinChange}
+                      placeholder={joinPlaceholder}
+                      fullWidth
+                    />
+                    <Button preset="primary" className={styles.joinButton} type="submit">
+                      <FormattedMessage id="home-page.join.cta" defaultMessage="Join" />
+                    </Button>
+                  </div>
+                  <div className={styles.joinHint}>
+                    <FormattedMessage
+                      id="home-page.join.hint"
+                      defaultMessage="Tip: you can paste an invite link from your teacher or enter the room code."
+                    />
+                  </div>
+                </form>
+              </div>
+
+              <div className={styles.ctaSectionCard}>
+                <div className={styles.ctaSectionHeader}>
+                  <div className={styles.ctaSectionKicker}>
+                    <FormattedMessage id="home-page.cta.teacher.kicker" defaultMessage="Teacher" />
+                  </div>
+                  <div className={styles.ctaSectionTitle}>
+                    <FormattedMessage id="home-page.cta.teacher.title" defaultMessage="Create a room" />
+                  </div>
+                </div>
+
+                <div className={styles.teacherActions}>
+                  {canCreateRooms && <CreateRoomButton />}
+                  <PWAButton />
+                </div>
+              </div>
+            </div>
           </div>
-          <div className={styles.heroImageContainer}>
-            <img
-              alt={intl.formatMessage(
-                {
-                  id: "home-page.hero-image-alt",
-                  defaultMessage: "Screenshot of {appName}"
-                },
-                { appName: configs.translation("app-name") }
-              )}
-              src={configs.image("home_background")}
-            />
+          <div className={styles.heroPanel}>
+            <div className={styles.heroPanelHeader}>
+              <div className={styles.heroPanelTitle}>
+                <FormattedMessage id="home-page.preview.title" defaultMessage="Classroom Preview" />
+              </div>
+              <div className={styles.heroPanelSubtitle}>
+                <FormattedMessage
+                  id="home-page.preview.subtitle"
+                  defaultMessage="A clean, distraction-free space for online lessons."
+                />
+              </div>
+            </div>
+
+            <div className={styles.heroPanelGrid}>
+              <div className={styles.heroPanelCard}>
+                <div className={styles.heroPanelCardTitle}>
+                  <FormattedMessage id="home-page.preview.feature.audio" defaultMessage="Live audio & chat" />
+                </div>
+                <div className={styles.heroPanelCardText}>
+                  <FormattedMessage
+                    id="home-page.preview.feature.audio.text"
+                    defaultMessage="Communicate clearly with voice and text."
+                  />
+                </div>
+              </div>
+              <div className={styles.heroPanelCard}>
+                <div className={styles.heroPanelCardTitle}>
+                  <FormattedMessage id="home-page.preview.feature.media" defaultMessage="Share learning materials" />
+                </div>
+                <div className={styles.heroPanelCardText}>
+                  <FormattedMessage
+                    id="home-page.preview.feature.media.text"
+                    defaultMessage="Drop PDFs, videos, links and 3D models into the room."
+                  />
+                </div>
+              </div>
+              <div className={styles.heroPanelCard}>
+                <div className={styles.heroPanelCardTitle}>
+                  <FormattedMessage id="home-page.preview.feature.private" defaultMessage="Private by default" />
+                </div>
+                <div className={styles.heroPanelCardText}>
+                  <FormattedMessage
+                    id="home-page.preview.feature.private.text"
+                    defaultMessage="Invite-only access with safe sharing links."
+                  />
+                </div>
+              </div>
+              <div className={styles.heroPanelCard}>
+                <div className={styles.heroPanelCardTitle}>
+                  <FormattedMessage id="home-page.preview.feature.fast" defaultMessage="Fast to start" />
+                </div>
+                <div className={styles.heroPanelCardText}>
+                  <FormattedMessage
+                    id="home-page.preview.feature.fast.text"
+                    defaultMessage="Create a room in seconds. No installs required."
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.heroPanelFooter}>
+              <div className={styles.heroPanelFooterItem}>
+                <FormattedMessage id="home-page.preview.footer.teacher" defaultMessage="Teacher" />
+                : <b>
+                  <FormattedMessage id="home-page.preview.footer.teacher.value" defaultMessage="Create Room" />
+                </b>
+              </div>
+              <div className={styles.heroPanelFooterItem}>
+                <FormattedMessage id="home-page.preview.footer.student" defaultMessage="Student" />
+                : <b>
+                  <FormattedMessage id="home-page.preview.footer.student.value" defaultMessage="Join a class" />
+                </b>
+              </div>
+            </div>
           </div>
         </div>
       </Container>

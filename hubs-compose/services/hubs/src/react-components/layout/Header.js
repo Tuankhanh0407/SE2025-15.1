@@ -1,14 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { FormattedMessage } from "react-intl";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCog } from "@fortawesome/free-solid-svg-icons/faCog";
 import maskEmail from "../../utils/mask-email";
 import styles from "./Header.scss";
 import { Container } from "./Container";
 import { SocialBar } from "../home/SocialBar";
 import { SignInButton } from "../home/SignInButton";
-import { AppLogo } from "../misc/AppLogo";
 
 export function Header({
   showCloud,
@@ -30,11 +27,6 @@ export function Header({
       <Container as="div" className={styles.container}>
         <nav>
           <ul>
-            <li>
-              <a href="/" className={styles.homeLink}>
-                <AppLogo />
-              </a>
-            </li>
             {enableSpoke && (
               <li>
                 <a href="/spoke">
@@ -80,10 +72,6 @@ export function Header({
             {isAdmin && (
               <li>
                 <a href="/admin" rel="noreferrer noopener">
-                  <i>
-                    <FontAwesomeIcon icon={faCog} />
-                  </i>
-                  &nbsp;
                   <FormattedMessage id="header.admin" defaultMessage="Admin" />
                 </a>
               </li>

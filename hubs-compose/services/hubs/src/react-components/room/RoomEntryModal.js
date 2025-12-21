@@ -11,7 +11,7 @@ import styles from "./RoomEntryModal.scss";
 import styleUtils from "../styles/style-utils.scss";
 import { useCssBreakpoints } from "react-use-css-breakpoints";
 import { Column } from "../layout/Column";
-import { AppLogo } from "../misc/AppLogo";
+import classroomLogo from "../../../admin/src/assets/images/classroom_logo.png";
 import { FormattedMessage } from "react-intl";
 
 export function RoomEntryModal({
@@ -31,7 +31,9 @@ export function RoomEntryModal({
   return (
     <Modal className={classNames(styles.roomEntryModal, className)} disableFullscreen {...rest}>
       <Column center className={styles.content}>
-        {breakpoint !== "sm" && breakpoint !== "md" && <AppLogo className={styles.logo} />}
+        {breakpoint !== "sm" && breakpoint !== "md" && (
+          <img className={styles.logo} alt="Classroom" src={classroomLogo} />
+        )}
         <div className={styles.roomName}>
           <h5>
             <FormattedMessage id="room-entry-modal.room-name-label" defaultMessage="Room Name" />
