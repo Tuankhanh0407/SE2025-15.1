@@ -20,6 +20,10 @@ let _locale = DEFAULT_LOCALE;
 let _localeData = defaultLocaleData;
 
 function findLocale(locale) {
+  if (!locale || locale === "browser") {
+    return DEFAULT_LOCALE;
+  }
+
   const locales = (() => {
     if (navigator.languages) {
       return [...navigator.languages];
@@ -32,9 +36,7 @@ function findLocale(locale) {
     }
   })();
 
-  if (locale && locale !== "browser") {
-    locales.unshift(locale);
-  }
+  locales.unshift(locale);
 
   for (let i = 0; i < locales.length; i++) {
     const curLocale = locales[i];
