@@ -21,7 +21,7 @@ export function useLectureMode() {
 
     // Listen for lecture mode messages
     useEffect(() => {
-        const scene = AFRAME.scenes[0];
+        const scene = typeof AFRAME !== 'undefined' && AFRAME.scenes ? AFRAME.scenes[0] : null;
         if (!scene) return;
 
         const messageDispatch = APP.messageDispatch;
@@ -50,7 +50,8 @@ export function useLectureMode() {
                     });
 
                     // If we are the target, lower our hand automatically
-                    if (targetSessionId === NAF.clientId) {
+                    const currentClientId = typeof NAF !== 'undefined' ? NAF.clientId : null;
+                    if (targetSessionId === currentClientId) {
                         window.APP.hubChannel?.lowerHand();
 
                         // Show notification
@@ -72,7 +73,8 @@ export function useLectureMode() {
                     });
 
                     // If we are the target, show notification
-                    if (targetSessionId === NAF.clientId) {
+                    const currentClientId = typeof NAF !== 'undefined' ? NAF.clientId : null;
+                    if (targetSessionId === currentClientId) {
                         scene?.emit("chat_notification", {
                             message: `🔇 Your speaking permission has been revoked.`
                         });
@@ -89,7 +91,8 @@ export function useLectureMode() {
     }, []);
 
     // Check if current user can speak
-    const canSpeak = isTeacher || !lectureModeEnabled || speakingPermissions.has(NAF.clientId);
+    const nafClientId = typeof NAF !== 'undefined' ? NAF.clientId : null;
+    const canSpeak = isTeacher || !lectureModeEnabled || (nafClientId && speakingPermissions.has(nafClientId));
 
     // Check if a specific user can speak
     const userCanSpeak = useCallback((sessionId) => {

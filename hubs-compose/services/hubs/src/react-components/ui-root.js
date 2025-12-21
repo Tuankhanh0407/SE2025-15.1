@@ -54,6 +54,9 @@ import { ChatSidebarContainer } from "./room/ChatSidebarContainer";
 import { WhiteboardSidebar } from "./room/WhiteboardSidebar";
 import { AttendanceSidebar } from "./room/AttendanceSidebar";
 import { TeacherToolbarButtons } from "./room/TeacherToolbarButtons";
+import { StudentPresentButton } from "./room/StudentPresentButton";
+import { PresentationRequestsModal } from "./room/PresentationRequestsModal";
+
 import { HandRaiseNotification } from "./room/HandRaiseNotification";
 import { ContentMenu, PeopleMenuButton, ObjectsMenuButton, ECSDebugMenuButton } from "./room/ContentMenu";
 import { ReactComponent as CameraIcon } from "./icons/Camera.svg";
@@ -217,7 +220,9 @@ class UIRoot extends Component {
     chatPrefix: "",
     chatAutofocus: false,
     showWhiteboard: false,
-    showAttendance: false
+    showAttendance: false,
+    showProjection: false,
+    showPresentationRequests: false
   };
 
   constructor(props) {
@@ -331,7 +336,10 @@ class UIRoot extends Component {
     this.props.scene.addEventListener("share_video_enabled", this.onShareVideoEnabled);
     this.props.scene.addEventListener("share_video_disabled", this.onShareVideoDisabled);
     this.props.scene.addEventListener("share_video_failed", this.onShareVideoFailed);
+    this.props.scene.addEventListener("board_projection_started", this.onBoardProjectionStarted);
+    this.props.scene.addEventListener("board_projection_stopped", this.onBoardProjectionStopped);
     this.props.scene.addEventListener("exit", this.exitEventHandler);
+
     this.props.scene.addEventListener("action_exit_watch", () => {
       if (this.state.hide) {
         this.setState({ hide: false, hideUITip: false });
@@ -421,7 +429,10 @@ class UIRoot extends Component {
     this.props.scene.removeEventListener("share_video_enabled", this.onShareVideoEnabled);
     this.props.scene.removeEventListener("share_video_disabled", this.onShareVideoDisabled);
     this.props.scene.removeEventListener("share_video_failed", this.onShareVideoFailed);
+    this.props.scene.removeEventListener("board_projection_started", this.onBoardProjectionStarted);
+    this.props.scene.removeEventListener("board_projection_stopped", this.onBoardProjectionStopped);
     this.props.scene.removeEventListener("action_media_tweet", this.onTweet);
+
     this.props.store.removeEventListener("statechanged", this.storeUpdated);
     window.removeEventListener("concurrentload", this.onConcurrentLoad);
     window.removeEventListener("idle_detected", this.onIdleDetected);
@@ -507,6 +518,15 @@ class UIRoot extends Component {
   onShareVideoFailed = () => {
     this.setState({ showVideoShareFailed: true });
   };
+
+  onBoardProjectionStarted = () => {
+    this.setState({ showProjection: true });
+  };
+
+  onBoardProjectionStopped = () => {
+    this.setState({ showProjection: false });
+  };
+
 
   shareVideo = mediaSource => {
     this.props.scene.emit(`action_share_${mediaSource}`);
@@ -1609,6 +1629,12 @@ class UIRoot extends Component {
                       onClose={() => this.setState({ showAttendance: false })}
                     />
                     <HandRaiseNotification />
+                    {this.state.showPresentationRequests && (
+                      <PresentationRequestsModal
+                        onClose={() => this.setState({ showPresentationRequests: false })}
+                      />
+                    )}
+
                   </>
                 }
                 toolbarLeft={
@@ -1620,11 +1646,27 @@ class UIRoot extends Component {
                       store={this.props.store}
                     />
                     <TeacherToolbarButtons
+                      scene={this.props.scene}
                       showWhiteboard={this.state.showWhiteboard}
                       onToggleWhiteboard={() => this.setState({ showWhiteboard: !this.state.showWhiteboard })}
                       showAttendance={this.state.showAttendance}
                       onToggleAttendance={() => this.setState({ showAttendance: !this.state.showAttendance })}
+                      showProjection={this.state.showProjection}
+                      onToggleProjection={() => {
+                        const isProjecting = !this.state.showProjection;
+                        this.setState({ showProjection: isProjecting });
+                        // Emit scene event to start/stop board projection
+                        if (isProjecting) {
+                          this.props.scene.emit("start_board_projection");
+                        } else {
+                          this.props.scene.emit("stop_board_projection");
+                        }
+                      }}
+                      showPresentationRequests={this.state.showPresentationRequests}
+                      onTogglePresentationRequests={() => this.setState({ showPresentationRequests: !this.state.showPresentationRequests })}
                     />
+                    <StudentPresentButton />
+
                     {isLockedDownDemo && <SeePlansCTA />}
                   </>
                 }

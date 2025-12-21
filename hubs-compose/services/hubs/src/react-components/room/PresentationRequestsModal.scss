@@ -1,0 +1,256 @@
+@import "../styles/theme";
+
+/* Modal wrapper với viền xanh nước biển RÕ RÀNG */
+.modalWrapper {
+    border: 3px solid #3498db !important;
+    border-radius: 16px !important;
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.15), 0 8px 32px rgba(52, 152, 219, 0.25) !important;
+    overflow: hidden;
+
+    /* Header với tiêu đề LỚN HƠN */
+    :global(.header) {
+        border-bottom: 3px solid #3498db !important;
+        background: linear-gradient(135deg, rgba(52, 152, 219, 0.12), rgba(41, 128, 185, 0.06));
+        height: 64px !important;
+    }
+
+    :global(.header h5) {
+        font-size: 60px !important;
+        font-weight: 700 !important;
+        color: #2980b9 !important;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+}
+
+.container {
+    padding: 24px;
+    min-width: 400px;
+    max-width: 500px;
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    color: $text1-color;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(52, 152, 219, 0.3);
+}
+
+.liveIndicator {
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(231, 76, 60, 0.7);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(1.15);
+    }
+}
+
+.badge {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 20px;
+    min-width: 26px;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(52, 152, 219, 0.4);
+    margin-left: auto;
+}
+
+.currentPresenter {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(192, 57, 43, 0.06));
+    border: 3px solid #e74c3c;
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 24px;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+
+.presenterCard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.presenterName {
+    font-weight: 600;
+    font-size: 17px;
+    color: $text1-color;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    &::before {
+        content: "🎤";
+        font-size: 22px;
+    }
+}
+
+.requestsSection {
+    margin-bottom: 16px;
+}
+
+.sectionIcon {
+    font-size: 22px;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 48px 24px;
+    color: $text2-color;
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.08), rgba(41, 128, 185, 0.04));
+    border-radius: 16px;
+    border: 3px dashed #3498db;
+}
+
+.emptyIcon {
+    font-size: 60px;
+    display: block;
+    margin-bottom: 20px;
+    opacity: 0.9;
+    animation: wave 2s ease-in-out infinite;
+}
+
+@keyframes wave {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(15deg);
+    }
+
+    75% {
+        transform: rotate(-15deg);
+    }
+}
+
+.emptyTitle {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: $text1-color;
+}
+
+.emptySubtitle {
+    margin: 0;
+    font-size: 14px;
+    color: $text3-color;
+    line-height: 1.5;
+}
+
+.requestList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* Request item với viền XANH NƯỚC BIỂN RÕ RÀNG */
+.requestItem {
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.06), rgba(41, 128, 185, 0.03));
+    border: 3px solid #3498db;
+    border-radius: 14px;
+    transition: all 0.25s ease;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1), 0 4px 16px rgba(0, 0, 0, 0.06);
+
+    &:hover {
+        border-color: #2980b9;
+        box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.2), 0 8px 24px rgba(52, 152, 219, 0.2);
+        transform: translateY(-3px);
+    }
+}
+
+.requesterInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.requesterName {
+    font-weight: 600;
+    font-size: 17px;
+    color: $text1-color;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    &::before {
+        content: "👤";
+        font-size: 20px;
+    }
+}
+
+.timestamp {
+    font-size: 13px;
+    color: $text3-color;
+    opacity: 0.8;
+}
+
+/* Buttons căn giữa theo 2 cột */
+.actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding-top: 16px;
+    border-top: 2px solid rgba(52, 152, 219, 0.2);
+
+    button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+.instructions {
+    padding: 18px 20px;
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(41, 128, 185, 0.06));
+    border-radius: 14px;
+    font-size: 14px;
+    color: $text2-color;
+    line-height: 1.6;
+    border-left: 5px solid #3498db;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(52, 152, 219, 0.1);
+
+    p {
+        margin: 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+
+        &::before {
+            content: "💡";
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+    }
+}

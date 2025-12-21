@@ -64,14 +64,19 @@ export function usePaginatedAPI(apiCallback) {
           return;
         }
 
+        // Add null safety for response
+        const meta = response?.meta || {};
+        const entries = response?.entries || [];
+        const suggestions = response?.suggestions || [];
+
         setState(curState => ({
           ...curState,
           isLoading: false,
-          hasMore: !!response.meta.next_cursor,
-          results: [...curState.results, ...response.entries],
-          suggestions: response.suggestions,
+          hasMore: !!meta.next_cursor,
+          results: [...curState.results, ...entries],
+          suggestions: suggestions,
           error: undefined,
-          nextCursor: response.meta.next_cursor
+          nextCursor: meta.next_cursor
         }));
       })
       .catch(error => {
