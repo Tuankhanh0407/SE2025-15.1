@@ -1633,6 +1633,11 @@ class UIRoot extends Component {
                     <HandRaiseNotification />
                     <ShareToStudentsButton scene={this.props.scene} />
                     <StudentFocusLock />
+                    {this.state.showPresentationRequests && (
+                      <PresentationRequestsModal
+                        onClose={() => this.setState({ showPresentationRequests: false })}
+                      />
+                    )}
                   </>
                 }
                 toolbarLeft={
