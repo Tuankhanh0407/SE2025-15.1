@@ -1,47 +1,59 @@
 @import "../styles/theme";
 
 /* Modal wrapper với viền xanh nước biển RÕ RÀNG */
-.modalWrapper {
+:local(.modalWrapper) {
+    background: #fff !important;
     border: 3px solid #3498db !important;
     border-radius: 16px !important;
     box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.15), 0 8px 32px rgba(52, 152, 219, 0.25) !important;
     overflow: hidden;
-
-    /* Header với tiêu đề LỚN HƠN */
-    :global(.header) {
-        border-bottom: 3px solid #3498db !important;
-        background: linear-gradient(135deg, rgba(52, 152, 219, 0.12), rgba(41, 128, 185, 0.06));
-        height: 64px !important;
-    }
-
-    :global(.header h5) {
-        font-size: 60px !important;
-        font-weight: 700 !important;
-        color: #2980b9 !important;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-    }
+    width: 100% !important;
+    max-width: 600px !important;
 }
 
-.container {
+:local(.modalHeader) {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 64px;
+    border-bottom: 3px solid #3498db;
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.12), rgba(41, 128, 185, 0.06));
+}
+
+:local(.closeButton) {
+    position: absolute;
+    left: 16px;
+}
+
+:local(.headerTitle) {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+    color: #2980b9;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+:local(.container) {
     padding: 24px;
     min-width: 400px;
-    max-width: 500px;
 }
 
-.sectionHeader {
+:local(.sectionHeader) {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-weight: 600;
-    font-size: 15px;
-    color: $text1-color;
+    font-weight: 700;
+    font-size: 14px;
+    color: #1f3b57;
+    letter-spacing: 0.2px;
     margin-bottom: 16px;
     padding-bottom: 12px;
-    border-bottom: 2px solid rgba(52, 152, 219, 0.3);
+    border-bottom: 1px solid rgba(52, 152, 219, 0.28);
 }
 
-.liveIndicator {
+:local(.liveIndicator) {
     width: 12px;
     height: 12px;
     background: linear-gradient(135deg, #e74c3c, #c0392b);
@@ -64,7 +76,7 @@
     }
 }
 
-.badge {
+:local(.badge) {
     background: linear-gradient(135deg, #3498db, #2980b9);
     color: white;
     font-size: 13px;
@@ -77,23 +89,30 @@
     margin-left: auto;
 }
 
-.currentPresenter {
-    background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(192, 57, 43, 0.06));
+:local(.currentPresenter) {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.10), rgba(192, 57, 43, 0.05));
     border: 3px solid #e74c3c;
     border-radius: 14px;
     padding: 18px;
     margin-bottom: 24px;
-    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.10), 0 10px 24px rgba(231, 76, 60, 0.10);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.14), 0 14px 28px rgba(231, 76, 60, 0.14);
+    }
 }
 
-.presenterCard {
+:local(.presenterCard) {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
 }
 
-.presenterName {
+:local(.presenterName) {
     font-weight: 600;
     font-size: 17px;
     color: $text1-color;
@@ -103,32 +122,49 @@
 
     &::before {
         content: "🎤";
-        font-size: 22px;
+        font-size: 20px;
     }
 }
 
-.requestsSection {
+:local(.divider) {
+    height: 2px;
+    background: rgba(52, 152, 219, 0.18);
+    margin: 14px 0;
+    border-radius: 999px;
+}
+
+:local(.requestsSection) {
     margin-bottom: 16px;
 }
 
-.sectionIcon {
+:local(.sectionIcon) {
     font-size: 22px;
 }
 
-.emptyState {
+:local(.emptyState) {
     text-align: center;
-    padding: 48px 24px;
+    padding: 36px 22px;
     color: $text2-color;
-    background: linear-gradient(135deg, rgba(52, 152, 219, 0.08), rgba(41, 128, 185, 0.04));
+    background: radial-gradient(circle at 20% 20%, rgba(52, 152, 219, 0.14), transparent 55%),
+        radial-gradient(circle at 80% 30%, rgba(41, 128, 185, 0.10), transparent 55%),
+        linear-gradient(135deg, rgba(52, 152, 219, 0.06), rgba(41, 128, 185, 0.03));
     border-radius: 16px;
-    border: 3px dashed #3498db;
+    border: 2px dashed rgba(52, 152, 219, 0.55);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
 }
 
-.emptyIcon {
-    font-size: 60px;
-    display: block;
-    margin-bottom: 20px;
-    opacity: 0.9;
+:local(.emptyIcon) {
+    width: 72px;
+    height: 72px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 16px;
+    font-size: 34px;
+    opacity: 0.95;
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.18), rgba(41, 128, 185, 0.10));
+    border: 1px solid rgba(52, 152, 219, 0.35);
+    border-radius: 999px;
+    box-shadow: 0 10px 22px rgba(52, 152, 219, 0.16);
     animation: wave 2s ease-in-out infinite;
 }
 
@@ -148,21 +184,21 @@
     }
 }
 
-.emptyTitle {
-    margin: 0 0 10px 0;
+:local(.emptyTitle) {
+    margin: 0 0 8px 0;
     font-size: 18px;
-    font-weight: 600;
-    color: $text1-color;
+    font-weight: 700;
+    color: #102a43;
 }
 
-.emptySubtitle {
+:local(.emptySubtitle) {
     margin: 0;
     font-size: 14px;
-    color: $text3-color;
-    line-height: 1.5;
+    color: rgba(16, 42, 67, 0.70);
+    line-height: 1.55;
 }
 
-.requestList {
+:local(.requestList) {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -172,9 +208,10 @@
 }
 
 /* Request item với viền XANH NƯỚC BIỂN RÕ RÀNG */
-.requestItem {
+:local(.requestItem) {
     padding: 20px;
-    background: linear-gradient(135deg, rgba(52, 152, 219, 0.06), rgba(41, 128, 185, 0.03));
+    background: radial-gradient(circle at 20% 20%, rgba(52, 152, 219, 0.12), transparent 60%),
+        linear-gradient(135deg, rgba(52, 152, 219, 0.06), rgba(41, 128, 185, 0.03));
     border: 3px solid #3498db;
     border-radius: 14px;
     transition: all 0.25s ease;
@@ -187,7 +224,7 @@
     }
 }
 
-.requesterInfo {
+:local(.requesterInfo) {
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -195,7 +232,7 @@
     margin-bottom: 16px;
 }
 
-.requesterName {
+:local(.requesterName) {
     font-weight: 600;
     font-size: 17px;
     color: $text1-color;
@@ -210,19 +247,18 @@
     }
 }
 
-.timestamp {
+:local(.timestamp) {
     font-size: 13px;
     color: $text3-color;
     opacity: 0.8;
 }
-
 /* Buttons căn giữa theo 2 cột */
-.actions {
+
+:local(.actions) {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
-    padding-top: 16px;
-    border-top: 2px solid rgba(52, 152, 219, 0.2);
+    margin-top: 14px;
 
     button {
         width: 100%;
@@ -230,16 +266,50 @@
     }
 }
 
-.instructions {
-    padding: 18px 20px;
-    background: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(41, 128, 185, 0.06));
+:local(.acceptBtn),
+:local(.rejectBtn) {
+    border-radius: 14px !important;
+    height: 44px;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    letter-spacing: 0.1px;
+    box-shadow: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+:local(.acceptBtn) {
+    background: linear-gradient(135deg, #2ecc71, #27ae60) !important;
+    color: #fff !important;
+    border: none !important;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px rgba(46, 204, 113, 0.28) !important;
+    }
+}
+
+:local(.rejectBtn) {
+    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+    color: #fff !important;
+    border: none !important;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px rgba(231, 76, 60, 0.28) !important;
+    }
+}
+
+:local(.instructions) {
+    padding: 16px 18px;
+    background: radial-gradient(circle at 15% 20%, rgba(52, 152, 219, 0.22), transparent 60%),
+        linear-gradient(135deg, rgba(52, 152, 219, 0.10), rgba(41, 128, 185, 0.05));
     border-radius: 14px;
     font-size: 14px;
-    color: $text2-color;
+    color: rgba(16, 42, 67, 0.78);
     line-height: 1.6;
-    border-left: 5px solid #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.25);
     margin-bottom: 24px;
-    box-shadow: 0 2px 12px rgba(52, 152, 219, 0.1);
+    box-shadow: 0 10px 30px rgba(52, 152, 219, 0.10);
 
     p {
         margin: 0;
@@ -249,7 +319,14 @@
 
         &::before {
             content: "💡";
-            font-size: 22px;
+            font-size: 18px;
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 999px;
+            background: rgba(52, 152, 219, 0.16);
+            border: 1px solid rgba(52, 152, 219, 0.30);
             flex-shrink: 0;
         }
     }

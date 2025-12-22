@@ -1,5 +1,163 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { useTeacherRole } from "./useTeacherRole";
+
+const getIsCurrentUserTeacher = () => {
+    const profileTeacher = window.APP?.store?.state?.profile?.isTeacher;
+    if (profileTeacher !== undefined) return !!profileTeacher;
+
+    const myId = window.NAF?.clientId;
+    const presence = myId ? window.APP?.hubChannel?.presence?.state?.[myId] : null;
+    const roles = presence?.metas?.[0]?.roles;
+    return !!(roles?.owner || roles?.creator);
+};
+
+let _state = {
+    requests: [],
+    currentPresenterId: null,
+    isActuallyProjecting: false
+};
+
+const _listeners = new Set();
+let _initialized = false;
+let _initializing = false;
+let _initIntervalId = null;
+
+const _emitChange = () => {
+    for (const l of _listeners) l();
+};
+
+const _setState = updater => {
+    const next = typeof updater === "function" ? updater(_state) : updater;
+    _state = { ..._state, ...next };
+    _emitChange();
+};
+
+const _subscribe = listener => {
+    _listeners.add(listener);
+    return () => _listeners.delete(listener);
+};
+
+const _getSnapshot = () => _state;
+
+const _ensureInitialized = () => {
+    if (_initialized || _initializing) return;
+    _initializing = true;
+    const messageDispatch = window.APP?.messageDispatch;
+    if (!messageDispatch) {
+        _initializing = false;
+        return;
+    }
+
+    const onMessage = event => {
+        const msg = event.detail;
+        if (!msg) return;
+
+        if (msg.type === "present_request") {
+            const { requesterId, requesterName } = msg.body || {};
+            if (!requesterId) return;
+
+            console.log("[PresentRequests] Request received:", requesterName);
+
+            _setState(prev => {
+                if (prev.requests.some(r => r.requesterId === requesterId)) return prev;
+                return {
+                    requests: [
+                        ...prev.requests,
+                        {
+                            requesterId,
+                            requesterName: requesterName || "Student",
+                            ts: Date.now()
+                        }
+                    ]
+                };
+            });
+        }
+
+        if (msg.type === "present_approved") {
+            const { presenterId, presenterName } = msg.body || {};
+            if (!presenterId) return;
+
+            console.log("[PresentRequests] Presenter approved:", presenterName);
+
+            _setState(prev => ({
+                currentPresenterId: presenterId,
+                isActuallyProjecting: false,
+                requests: prev.requests.filter(r => r.requesterId !== presenterId)
+            }));
+        }
+
+        if (msg.type === "present_started") {
+            const { presenterId } = msg.body || {};
+            console.log("[PresentRequests] Presentation actually started by:", presenterId);
+            _setState({ isActuallyProjecting: true });
+
+            if (getIsCurrentUserTeacher() && presenterId) {
+                const scene = typeof AFRAME !== "undefined" && AFRAME.scenes ? AFRAME.scenes[0] : null;
+                scene?.emit("start_board_projection", { presenterId });
+                console.log("[PresentRequests] Teacher spawning projection for student:", presenterId);
+            }
+        }
+
+        if (msg.type === "present_ended") {
+            const { presenterId } = msg.body || {};
+            console.log("[PresentRequests] Presentation ended:", presenterId);
+
+            _setState(prev => {
+                if (!presenterId || presenterId === prev.currentPresenterId) {
+                    return { currentPresenterId: null, isActuallyProjecting: false };
+                }
+                return prev;
+            });
+
+            if (getIsCurrentUserTeacher()) {
+                const scene = typeof AFRAME !== "undefined" && AFRAME.scenes ? AFRAME.scenes[0] : null;
+                scene?.emit("stop_board_projection");
+            }
+        }
+
+        if (msg.type === "present_revoked") {
+            const { presenterId } = msg.body || {};
+            console.log("[PresentRequests] Presenter revoked:", presenterId);
+
+            const myId = window.NAF?.clientId;
+            if (myId === presenterId || myId === _state.currentPresenterId) {
+                const scene = typeof AFRAME !== "undefined" && AFRAME.scenes ? AFRAME.scenes[0] : null;
+                scene?.emit("stop_board_projection");
+            }
+
+            if (getIsCurrentUserTeacher()) {
+                const scene = typeof AFRAME !== "undefined" && AFRAME.scenes ? AFRAME.scenes[0] : null;
+                scene?.emit("stop_board_projection");
+            }
+
+            _setState(prev => {
+                if (!presenterId || presenterId === prev.currentPresenterId) {
+                    return { currentPresenterId: null, isActuallyProjecting: false };
+                }
+                return prev;
+            });
+        }
+
+        if (msg.type === "present_denied") {
+            const { requesterId } = msg.body || {};
+            if (!requesterId) return;
+
+            console.log("[PresentRequests] Request denied:", requesterId);
+            _setState(prev => ({
+                requests: prev.requests.filter(r => r.requesterId !== requesterId)
+            }));
+        }
+    };
+
+    messageDispatch.addEventListener("message", onMessage);
+    _initialized = true;
+    _initializing = false;
+
+    if (_initIntervalId) {
+        clearInterval(_initIntervalId);
+        _initIntervalId = null;
+    }
+};
 
 /**
  * Hook to manage presentation requests in the classroom.
@@ -18,133 +176,28 @@ import { useTeacherRole } from "./useTeacherRole";
 export function usePresentationRequests() {
     const { isTeacher } = useTeacherRole();
 
-    // List of pending presentation requests: [{ requesterId, requesterName, ts }]
-    const [requests, setRequests] = useState([]);
-
-    // Current presenter's session ID (null if no one is presenting)
-    const [currentPresenterId, setCurrentPresenterId] = useState(null);
-
-    // Whether the approved student has actually started presenting (screen share active)
-    const [isActuallyProjecting, setIsActuallyProjecting] = useState(false);
-
-    // Ref to keep requests in sync for closures
-    const requestsRef = useRef(requests);
     useEffect(() => {
-        requestsRef.current = requests;
-    }, [requests]);
+        _ensureInitialized();
 
-    // Listen for broadcast messages
-    useEffect(() => {
-        const messageDispatch = window.APP?.messageDispatch;
-        if (!messageDispatch) return;
+        if (!_initialized && !_initIntervalId) {
+            _initIntervalId = setInterval(() => {
+                _ensureInitialized();
+            }, 500);
+        }
 
-        const onMessage = (event) => {
-            const msg = event.detail;
-            if (!msg) return;
-
-            // Student -> Teacher: request to present
-            if (msg.type === "present_request") {
-                const { requesterId, requesterName } = msg.body || {};
-                if (!requesterId) return;
-
-                console.log("[PresentRequests] Request received:", requesterName);
-
-                setRequests(prev => {
-                    if (prev.some(r => r.requesterId === requesterId)) return prev;
-                    return [...prev, {
-                        requesterId,
-                        requesterName: requesterName || "Student",
-                        ts: Date.now()
-                    }];
-                });
-            }
-
-            // Teacher -> Everyone: approved presenter
-            if (msg.type === "present_approved") {
-                const { presenterId, presenterName } = msg.body || {};
-                if (!presenterId) return;
-
-                console.log("[PresentRequests] Presenter approved:", presenterName);
-
-                setCurrentPresenterId(presenterId);
-                setIsActuallyProjecting(false); // Not presenting yet, waiting for user to click Start
-                // Remove from requests list
-                setRequests(prev => prev.filter(r => r.requesterId !== presenterId));
-
-                // NOTE: We do NOT auto-start projection here!
-                // The student must click "Start Presenting" button due to browser gesture requirements.
-                // getDisplayMedia() requires a user gesture (click) to work.
-            }
-
-            // Presenter actually started projecting
-            if (msg.type === "present_started") {
-                const { presenterId } = msg.body || {};
-                console.log("[PresentRequests] Presentation actually started by:", presenterId);
-                setIsActuallyProjecting(true);
-
-                // Teacher: automatically show student's screen on the board
-                if (isTeacher && presenterId) {
-                    const scene = typeof AFRAME !== 'undefined' && AFRAME.scenes ? AFRAME.scenes[0] : null;
-                    scene?.emit("start_board_projection", { presenterId });
-                    console.log("[PresentRequests] Teacher spawning projection for student:", presenterId);
-                }
-            }
-
-            // Presenter ended presenting
-            if (msg.type === "present_ended") {
-                const { presenterId } = msg.body || {};
-                console.log("[PresentRequests] Presentation ended:", presenterId);
-
-                // Clear current presenter if it matches or no ID provided
-                if (!presenterId || presenterId === currentPresenterId) {
-                    setCurrentPresenterId(null);
-                    setIsActuallyProjecting(false);
-                }
-
-                // Teacher: stop showing the projection on the board
-                if (isTeacher) {
-                    const scene = typeof AFRAME !== 'undefined' && AFRAME.scenes ? AFRAME.scenes[0] : null;
-                    scene?.emit("stop_board_projection");
-                }
-            }
-
-            // Teacher revoked presenter
-            if (msg.type === "present_revoked") {
-                const { presenterId } = msg.body || {};
-                console.log("[PresentRequests] Presenter revoked:", presenterId);
-
-                // If current user is being revoked, stop their projection
-                const myId = window.NAF?.clientId;
-                if (myId === presenterId || myId === currentPresenterId) {
-                    const scene = typeof AFRAME !== 'undefined' && AFRAME.scenes ? AFRAME.scenes[0] : null;
-                    scene?.emit("stop_board_projection");
-                }
-
-                // Teacher: also stop the board projection
-                if (isTeacher) {
-                    const scene = typeof AFRAME !== 'undefined' && AFRAME.scenes ? AFRAME.scenes[0] : null;
-                    scene?.emit("stop_board_projection");
-                }
-
-                if (!presenterId || presenterId === currentPresenterId) {
-                    setCurrentPresenterId(null);
-                    setIsActuallyProjecting(false);
-                }
-            }
-
-            // Teacher denied request
-            if (msg.type === "present_denied") {
-                const { requesterId } = msg.body || {};
-                if (!requesterId) return;
-
-                console.log("[PresentRequests] Request denied:", requesterId);
-                setRequests(prev => prev.filter(r => r.requesterId !== requesterId));
+        return () => {
+            if (_listeners.size === 0 && _initIntervalId) {
+                clearInterval(_initIntervalId);
+                _initIntervalId = null;
             }
         };
+    }, []);
 
-        messageDispatch.addEventListener("message", onMessage);
-        return () => messageDispatch.removeEventListener("message", onMessage);
-    }, [currentPresenterId]);
+    const { requests, currentPresenterId, isActuallyProjecting } = useSyncExternalStore(
+        _subscribe,
+        _getSnapshot,
+        _getSnapshot
+    );
 
     // Student: send request to present
     const requestToPresent = useCallback(() => {
@@ -239,7 +292,7 @@ export function usePresentationRequests() {
             "present_started"
         );
 
-        setIsActuallyProjecting(true);
+        _setState({ isActuallyProjecting: true });
     }, [currentPresenterId]);
 
     // Presenter (student): end presenting by themselves
@@ -264,7 +317,7 @@ export function usePresentationRequests() {
             "chat"
         );
 
-        setIsActuallyProjecting(false);
+        _setState({ isActuallyProjecting: false });
     }, []);
 
     // Check if current user is the approved presenter

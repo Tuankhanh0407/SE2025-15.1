@@ -20,6 +20,19 @@ export function PresentationRequestsModal({ onClose }) {
         revokePresenter
     } = usePresentationRequests();
 
+    const formatRelativeTime = (ts) => {
+        if (!ts) return "";
+        const diffMs = Date.now() - ts;
+        const diffMins = Math.max(0, Math.floor(diffMs / 60000));
+
+        if (diffMins < 1) return "Just now";
+        if (diffMins < 60) return `${diffMins} minutes ago`;
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `${diffHours} hours ago`;
+        const diffDays = Math.floor(diffHours / 24);
+        return `${diffDays} days ago`;
+    };
+
     // Get current presenter info
     const getCurrentPresenterName = () => {
         if (!currentPresenterId) return null;
@@ -31,43 +44,38 @@ export function PresentationRequestsModal({ onClose }) {
 
     return (
         <Modal
-            title={<FormattedMessage id="presentation-requests.title" defaultMessage="Presentation Requests" />}
-            beforeTitle={<CloseButton onClick={onClose} />}
             className={styles.modalWrapper}
         >
+            <div className={styles.modalHeader}
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                    // Prevent accidental close if user clicks the header background
+                    e.stopPropagation();
+                }}
+            >
+                <CloseButton className={styles.closeButton} onClick={onClose} />
+                <h5 className={styles.headerTitle}>
+                    <FormattedMessage id="presentation-requests.title" defaultMessage="PRESENTATION REQUESTS" />
+                </h5>
+            </div>
             <div className={styles.container}>
                 {/* Instructions - Đưa lên trên cùng */}
                 <div className={styles.instructions}>
                     <p>
                         <FormattedMessage
                             id="presentation-requests.instructions"
-                            defaultMessage="Approve a student's request to let them share their screen on the board. Only one presenter at a time."
+                            defaultMessage="Accept or reject presentation requests from participants. Accepted participants will be able to share their screen."
                         />
                     </p>
                 </div>
 
                 {/* Current Presenter Section */}
                 {currentPresenterId && (
-                    <div className={styles.currentPresenter}>
-                        <div className={styles.sectionHeader}>
-                            <span className={styles.liveIndicator}></span>
-                            <FormattedMessage
-                                id="presentation-requests.current-presenter"
-                                defaultMessage="Current Presenter"
-                            />
-                        </div>
+                    <div className={styles.currentPresenter} role="button" tabIndex={0} onClick={revokePresenter}>
                         <div className={styles.presenterCard}>
                             <span className={styles.presenterName}>{presenterName}</span>
-                            <Button
-                                preset="cancel"
-                                sm
-                                onClick={revokePresenter}
-                            >
-                                <FormattedMessage
-                                    id="presentation-requests.stop"
-                                    defaultMessage="Stop"
-                                />
-                            </Button>
+                            <span className={styles.liveIndicator}></span>
                         </div>
                     </div>
                 )}
@@ -75,10 +83,10 @@ export function PresentationRequestsModal({ onClose }) {
                 {/* Pending Requests Section */}
                 <div className={styles.requestsSection}>
                     <div className={styles.sectionHeader}>
-                        <span className={styles.sectionIcon}>🙋‍♂️</span>
+                        <span className={styles.sectionIcon}>📋</span>
                         <FormattedMessage
                             id="presentation-requests.pending"
-                            defaultMessage="Pending Requests"
+                            defaultMessage="PENDING REQUESTS"
                         />
                         {requests.length > 0 && (
                             <span className={styles.badge}>{requests.length}</span>
@@ -110,28 +118,31 @@ export function PresentationRequestsModal({ onClose }) {
                                             {request.requesterName}
                                         </span>
                                         <span className={styles.timestamp}>
-                                            {new Date(request.ts).toLocaleTimeString()}
+                                            {formatRelativeTime(request.ts)}
                                         </span>
                                     </div>
+                                    <div className={styles.divider} />
                                     <div className={styles.actions}>
                                         <Button
                                             preset="accept"
                                             sm
+                                            className={styles.acceptBtn}
                                             onClick={() => approveRequest(request.requesterId, request.requesterName)}
                                         >
                                             <FormattedMessage
                                                 id="presentation-requests.approve"
-                                                defaultMessage="Accept"
+                                                defaultMessage="✓ Accept"
                                             />
                                         </Button>
                                         <Button
                                             preset="cancel"
                                             sm
+                                            className={styles.rejectBtn}
                                             onClick={() => denyRequest(request.requesterId)}
                                         >
                                             <FormattedMessage
                                                 id="presentation-requests.deny"
-                                                defaultMessage="Deny"
+                                                defaultMessage="✕ Deny"
                                             />
                                         </Button>
                                     </div>
