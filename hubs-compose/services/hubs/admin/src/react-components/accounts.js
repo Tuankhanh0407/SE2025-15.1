@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable @calm/react-intl/missing-formatted-message*/
 
-import React, { Component } from "react";
+import React, { Component, useState } from "react";
 import { connect } from "react-redux";
 import { IdentityEditLink, IdentityCreateLink } from "./fields";
 import { AccountEditToolbar } from "./account-edit-toolbar";
@@ -14,6 +14,7 @@ import Typography from "@material-ui/core/Typography";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Snackbar from "@material-ui/core/Snackbar";
 import SnackbarContent from "@material-ui/core/SnackbarContent";
+import { Dialog, DialogContent, DialogContentText, DialogActions } from "@material-ui/core";
 
 import {
   BooleanField,
@@ -23,6 +24,7 @@ import {
   Edit,
   EditButton,
   Filter,
+  FunctionField,
   List,
   ReferenceManyField,
   SelectInput,
@@ -31,6 +33,247 @@ import {
   TextInput,
   refreshView
 } from "react-admin";
+
+async function callAccountAdminAction(action, accountId) {
+  const resp = await fetch(`/api/v1/accounts/${accountId}/${action}`, {
+    method: "post",
+    headers: {
+      "content-type": "application/json",
+      authorization: `bearer ${window.APP.store.state.credentials.token}`
+    }
+  });
+
+  let json;
+  try {
+    json = await resp.json();
+  } catch (e) {
+    json = null;
+  }
+
+  if (!resp.ok) {
+    const error = (json && (json.error || json.message)) || resp.statusText;
+    throw new Error(error);
+  }
+
+  return json;
+}
+
+async function callAccountDelete(accountId) {
+  const resp = await fetch(`/api/v1/accounts/${accountId}`, {
+    method: "delete",
+    headers: {
+      "content-type": "application/json",
+      authorization: `bearer ${window.APP.store.state.credentials.token}`
+    }
+  });
+
+  let json;
+  try {
+    json = await resp.json();
+  } catch (e) {
+    json = null;
+  }
+
+  if (!resp.ok) {
+    const error = (json && (json.error || json.message)) || resp.statusText;
+    throw new Error(error);
+  }
+
+  return json;
+}
+
+function humanizeAdminAction(action) {
+  switch (action) {
+    case "disable":
+      return "Disable";
+    case "enable":
+      return "Enable";
+    case "promote_admin":
+      return "Promote to admin";
+    case "demote_admin":
+      return "Demote from admin";
+    case "delete":
+      return "Delete";
+    default:
+      return action;
+  }
+}
+
+function humanizeAdminError(err) {
+  const msg = (err && err.message) || "";
+
+  switch (msg) {
+    case "cannot_disable_self":
+      return "You cannot disable your own account.";
+    case "cannot_demote_self":
+      return "You cannot demote your own admin role.";
+    case "cannot_disable_last_admin":
+      return "You cannot disable the last admin account.";
+    case "cannot_demote_last_admin":
+      return "You cannot demote the last admin account.";
+    default:
+      return msg || "Action failed.";
+  }
+}
+
+const AdminActionStates = Object.freeze({
+  Confirming: Symbol("confirming"),
+  Working: Symbol("working"),
+  Succeeded: Symbol("succeeded"),
+  Failed: Symbol("failed")
+});
+
+function AccountActions({ record, onActionDone }) {
+  const { Confirming, Working, Succeeded, Failed } = AdminActionStates;
+  const [open, setOpen] = useState(false);
+  const [action, setAction] = useState(null);
+  const [state, setState] = useState(Confirming);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const accountId = record && record.id;
+  const currentAccountId = window.APP && window.APP.store && window.APP.store.credentialsAccountId;
+  const isSelf = !!currentAccountId && `${currentAccountId}` === `${accountId}`;
+  const viewerIsAdmin = !!(window.APP && window.APP.isAdmin);
+
+  const start = nextAction => {
+    setAction(nextAction);
+    setState(Confirming);
+    setErrorMessage("");
+    setOpen(true);
+  };
+
+  const run = async () => {
+    if (!action || !accountId) return;
+
+    setState(Working);
+    setErrorMessage("");
+
+    try {
+      if (action === "delete") {
+        await callAccountDelete(accountId);
+      } else {
+        await callAccountAdminAction(action, accountId);
+      }
+      setState(Succeeded);
+    } catch (e) {
+      setErrorMessage(humanizeAdminError(e));
+      setState(Failed);
+    }
+  };
+
+  const close = () => {
+    setOpen(false);
+    if (state === Succeeded && onActionDone) onActionDone("Action completed successfully");
+    if (state === Failed && onActionDone) onActionDone(errorMessage || "Action failed");
+  };
+
+  return (
+    <>
+      {!viewerIsAdmin ? (
+        <span />
+      ) : (
+        <>
+          {record.state === "disabled" ? (
+            <Button size="small" onClick={() => start("enable")}>Enable</Button>
+          ) : (
+            <Button size="small" onClick={() => start("disable")} disabled={isSelf}>
+              Disable
+            </Button>
+          )}
+
+          {record.is_admin ? (
+            <Button size="small" onClick={() => start("demote_admin")} disabled={isSelf}>
+              Demote
+            </Button>
+          ) : (
+            <Button size="small" onClick={() => start("promote_admin")}>Promote</Button>
+          )}
+
+          <Button size="small" onClick={() => start("delete")} disabled={isSelf}>
+            Delete
+          </Button>
+        </>
+      )}
+
+      <Dialog open={open}>
+        <DialogContent>
+          <DialogContentText>
+            {(() => {
+              if (!action) return null;
+              const label = humanizeAdminAction(action);
+
+              switch (state) {
+                case Confirming:
+                  return (
+                    <>
+                      Are you sure you want to <b>{label}</b> for account {accountId}?
+                      {action === "disable" && (
+                        <>
+                          <br />
+                          <br />
+                          This will block sign-in and revoke active sessions.
+                        </>
+                      )}
+                      {action === "delete" && (
+                        <>
+                          <br />
+                          <br />
+                          This will permanently delete the account.
+                        </>
+                      )}
+                    </>
+                  );
+                case Working:
+                  return (
+                    <>
+                      Performing <b>{label}</b> for account {accountId}...
+                      <br />
+                      <br />
+                      <CircularProgress size={18} />
+                    </>
+                  );
+                case Succeeded:
+                  return <>Successfully completed <b>{label}</b> for account {accountId}.</>;
+                case Failed:
+                  return (
+                    <>
+                      Failed to complete <b>{label}</b> for account {accountId}.
+                      {errorMessage && (
+                        <>
+                          <br />
+                          <br />
+                          {errorMessage}
+                        </>
+                      )}
+                    </>
+                  );
+              }
+            })()}
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          {state === Confirming && (
+            <>
+              <Button variant="outlined" onClick={run}>
+                Confirm
+              </Button>
+              <Button variant="outlined" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+            </>
+          )}
+
+          {[Succeeded, Failed].includes(state) && (
+            <Button variant="outlined" onClick={close}>
+              Okay
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+}
 
 const styles = {
   hide: { display: "none" },
@@ -54,11 +297,13 @@ export const AccountList = withStyles(styles)(
         batchCreate: "",
         creating: false,
         createStatus: null,
-        createResults: ""
+        createResults: "",
+        adminActionStatus: ""
       };
       componentWillUnmount() {
         this.clearCreateStatusTimer();
         this.clearSearchStatusTimer();
+        this.clearAdminActionStatusTimer();
       }
       clearCreateStatusTimer() {
         if (this.createStatusTimer) {
@@ -71,6 +316,22 @@ export const AccountList = withStyles(styles)(
           clearTimeout(this.searchStatusTimer);
           this.searchStatusTimer = null;
         }
+      }
+
+      clearAdminActionStatusTimer() {
+        if (this.adminActionStatusTimer) {
+          clearTimeout(this.adminActionStatusTimer);
+          this.adminActionStatusTimer = null;
+        }
+      }
+
+      setAdminActionStatus(message) {
+        this.setState({ adminActionStatus: message });
+        this.clearAdminActionStatusTimer();
+        this.adminActionStatusTimer = setTimeout(() => {
+          this.setState({ adminActionStatus: "" });
+          this.adminActionStatusTimer = null;
+        }, 6000);
       }
       async onAccountSearch(e) {
         e.preventDefault();
@@ -237,6 +498,15 @@ export const AccountList = withStyles(styles)(
             <List {...other} filters={<AccountFilter />} bulkActionButtons={false}>
               <Datagrid>
                 <TextField source="id" />
+                <FunctionField
+                  label="Email"
+                  render={record => {
+                    const currentAccountId = window.APP && window.APP.store && window.APP.store.credentialsAccountId;
+                    const isSelf = currentAccountId && `${currentAccountId}` === `${record.id}`;
+                    const email = record.email || "";
+                    return email ? `${email}${isSelf ? " (You)" : ""}` : isSelf ? "(You)" : "";
+                  }}
+                />
                 <DateField source="inserted_at" />
                 <DateField source="updated_at" />
                 <ReferenceManyField label="Identity" target="_account_id" reference="identities">
@@ -249,9 +519,26 @@ export const AccountList = withStyles(styles)(
                 <IdentityCreateLink />
                 <BooleanField source="is_admin" />
                 <TextField source="state" />
+
+                <FunctionField
+                  label="Actions"
+                  render={record => (
+                    <AccountActions
+                      record={record}
+                      onActionDone={message => {
+                        this.setAdminActionStatus(message);
+                        this.props.refreshView();
+                      }}
+                    />
+                  )}
+                />
                 <EditButton />
               </Datagrid>
             </List>
+
+            <Snackbar open={!!this.state.adminActionStatus} autoHideDuration={5000}>
+              <SnackbarContent message={this.state.adminActionStatus}></SnackbarContent>
+            </Snackbar>
           </>
         );
       }
@@ -266,9 +553,10 @@ export const AccountEdit = withStyles(styles)(props => {
     <Edit {...other}>
       <SimpleForm toolbar={<AccountEditToolbar {...other} />}>
         <TextField label="Account ID" source="id" />
-        <BooleanInput source="is_admin" />
+        <BooleanInput source="is_admin" disabled />
         <SelectInput
           source="state"
+          disabled
           choices={[
             { id: "enabled", name: "enabled" },
             { id: "disabled", name: "disabled" }

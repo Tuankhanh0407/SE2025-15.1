@@ -1,7 +1,7 @@
 /* eslint-disable @calm/react-intl/missing-formatted-message*/
 
 import React, { useState } from "react";
-import { Toolbar, SaveButton } from "react-admin";
+import { Toolbar } from "react-admin";
 import { withStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
 import { Dialog, DialogContent, DialogContentText, DialogActions } from "@material-ui/core";
@@ -44,9 +44,7 @@ export const AccountEditToolbar = withStyles(accountEditToolbarStyles)(props => 
 
   return (
     <Toolbar {...other} className={`${classes.spaceBetween}`}>
-      <SaveButton />
-
-      {!props.record.is_admin && (
+      {props.record && !props.record.is_admin && (
         <Button label="Delete" onClick={() => setOpenConfirmationDialog(true)} variant="outlined">
           Delete
         </Button>
