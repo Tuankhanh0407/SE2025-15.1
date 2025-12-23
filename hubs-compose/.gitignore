@@ -3,3 +3,4 @@
 *.bak
 /services/reticulum/deps
 node_modules/
+/server/

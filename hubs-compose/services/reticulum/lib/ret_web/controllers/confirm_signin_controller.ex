@@ -40,7 +40,7 @@ defmodule RetWeb.ConfirmSigninController do
 
         credentials =
           identifier_hash
-          |> Account.account_for_login_identifier_hash(true)
+          |> Account.account_for_login_identifier_hash(true, decrypted_payload["email"])
           |> Account.credentials_for_account()
 
         RetWeb.Endpoint.broadcast!(auth_topic, "auth_credentials", %{credentials: credentials, payload: decrypted_payload})

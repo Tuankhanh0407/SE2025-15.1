@@ -17,6 +17,7 @@ defmodule Ret.Account do
     field :min_token_issued_at, :utc_datetime
     field :is_admin, :boolean
     field :state, Account.State
+    field :email, :string
 
     has_one :login, Login, foreign_key: :account_id
     has_one :identity, Identity, foreign_key: :account_id
@@ -47,20 +48,38 @@ defmodule Ret.Account do
   def exists_for_email?(email), do: account_for_email(email) != nil
 
   def account_for_email(email, create_if_not_exists \\ false) do
-    email |> identifier_hash_for_email |> account_for_login_identifier_hash(create_if_not_exists)
+    email = normalize_email(email)
+
+    if is_nil(email) do
+      nil
+    else
+      email
+      |> identifier_hash_for_email()
+      |> account_for_login_identifier_hash(create_if_not_exists, email)
+    end
   end
 
-  def find_or_create_account_for_email(email), do: account_for_email(email, true)
+  def find_or_create_account_for_email(email) do
+    email = normalize_email(email)
 
-  def account_for_login_identifier_hash(identifier_hash, create_if_not_exists \\ false) do
+    account_for_email(email, true)
+  end
+
+  def account_for_login_identifier_hash(nil, _create_if_not_exists, _email), do: nil
+
+  def account_for_login_identifier_hash(identifier_hash, create_if_not_exists \\ false, email \\ nil) do
     login = Repo.one(from l in Login, where: l.identifier_hash == ^identifier_hash)
 
     cond do
       login != nil ->
-        Account |> Repo.get(login.account_id) |> Repo.preload(@account_preloads)
+        Account
+        |> Repo.get(login.account_id)
+        |> Repo.preload(@account_preloads)
+        |> maybe_backfill_email(normalize_email(email))
 
       create_if_not_exists === true ->
         # Set the account to be an administrator if admin_email matches
+        email = normalize_email(email)
         is_admin =
           with admin_email when is_binary(admin_email) <- module_config(:admin_email) do
             identifier_hash === admin_email |> identifier_hash_for_email
@@ -70,7 +89,8 @@ defmodule Ret.Account do
 
         Repo.insert!(%Account{
           login: %Login{identifier_hash: identifier_hash},
-          is_admin: is_admin
+          is_admin: is_admin,
+          email: email
         })
 
       true ->
@@ -85,8 +105,31 @@ defmodule Ret.Account do
     token
   end
 
+  def identifier_hash_for_email(nil), do: nil
+
   def identifier_hash_for_email(email) do
     email |> String.downcase() |> Ret.Crypto.hash()
+  end
+
+  defp normalize_email(nil), do: nil
+  defp normalize_email(email) when is_binary(email), do: email |> String.trim() |> String.downcase()
+
+  defp maybe_backfill_email(nil, _email), do: nil
+
+  defp maybe_backfill_email(%Account{} = account, nil), do: account
+
+  defp maybe_backfill_email(%Account{} = account, email) do
+    if is_nil(account.email) || String.trim(to_string(account.email)) == "" do
+      account
+      |> Ecto.Changeset.change(email: email)
+      |> Repo.update()
+      |> case do
+        {:ok, updated} -> updated
+        {:error, _} -> account
+      end
+    else
+      account
+    end
   end
 
   def get_global_perms_for_account(account), do: %{} |> add_global_perms_for_account(account)

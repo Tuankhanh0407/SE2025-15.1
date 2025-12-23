@@ -183,6 +183,12 @@ defmodule RetWeb.Router do
       resources "/accounts", Api.V1.AccountController, only: [:create, :delete]
       patch "/accounts", Api.V1.AccountController, :update
       resources "/accounts/search", Api.V1.AccountSearchController, only: [:create]
+
+      post "/accounts/:id/disable", Api.V1.AccountAdminController, :disable
+      post "/accounts/:id/enable", Api.V1.AccountAdminController, :enable
+      post "/accounts/:id/promote_admin", Api.V1.AccountAdminController, :promote_admin
+      post "/accounts/:id/demote_admin", Api.V1.AccountAdminController, :demote_admin
+      post "/accounts/:id/revoke_sessions", Api.V1.AccountAdminController, :revoke_sessions
     end
   end
 
