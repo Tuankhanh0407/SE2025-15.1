@@ -1,10 +1,10 @@
 @use "../styles/theme.scss";
 
- /* ========================================
+/* ========================================
    HOMEPAGE - MODERN UI/UX REDESIGN
    ======================================== */
- 
- :local(.homePage) {
+
+:local(.homePage) {
   flex: 1;
   background: linear-gradient(180deg, #fbfcff 0%, #f4f7ff 60%, #ffffff 100%);
   padding: 0;
@@ -113,12 +113,19 @@
     gap: 72px;
     padding: 64px 56px 44px 56px;
   }
- }
+}
 
- :local(.heroPanel) {
-  width: 100%;
+:local(.rightColumn) {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   flex: 0.9;
   max-width: 600px;
+  width: 100%;
+}
+
+:local(.heroPanel) {
+  width: 100%;
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.88);
   border: 1px solid rgba(17, 24, 39, 0.10);
@@ -129,27 +136,27 @@
   @media (min-width: theme.$breakpoint-lg) {
     padding: 24px;
   }
- }
+}
 
- :local(.heroPanelHeader) {
+:local(.heroPanelHeader) {
   margin-bottom: 16px;
- }
+}
 
- :local(.heroPanelTitle) {
+:local(.heroPanelTitle) {
   font-size: 16px;
   font-weight: 800;
   letter-spacing: -0.01em;
   color: rgba(17, 24, 39, 0.95);
- }
+}
 
- :local(.heroPanelSubtitle) {
+:local(.heroPanelSubtitle) {
   margin-top: 6px;
   font-size: 13px;
   line-height: 1.45;
   color: rgba(55, 65, 81, 0.92);
- }
+}
 
- :local(.heroPanelGrid) {
+:local(.heroPanelGrid) {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
@@ -158,9 +165,9 @@
     grid-template-columns: 1fr 1fr;
     gap: 14px;
   }
- }
+}
 
- :local(.heroPanelCard) {
+:local(.heroPanelCard) {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(17, 24, 39, 0.08);
@@ -172,22 +179,22 @@
     border-color: rgba(79, 70, 229, 0.18);
     box-shadow: 0 16px 40px rgba(17, 24, 39, 0.10);
   }
- }
+}
 
- :local(.heroPanelCardTitle) {
+:local(.heroPanelCardTitle) {
   font-size: 13px;
   font-weight: 800;
   color: rgba(17, 24, 39, 0.92);
   margin-bottom: 6px;
- }
+}
 
- :local(.heroPanelCardText) {
+:local(.heroPanelCardText) {
   font-size: 12px;
   line-height: 1.45;
   color: rgba(55, 65, 81, 0.92);
- }
+}
 
- :local(.heroPanelFooter) {
+:local(.heroPanelFooter) {
   margin-top: 16px;
   padding-top: 12px;
   border-top: 1px solid rgba(17, 24, 39, 0.08);
@@ -199,12 +206,12 @@
     flex-direction: row;
     gap: 16px;
   }
- }
+}
 
- :local(.heroPanelFooterItem) {
+:local(.heroPanelFooterItem) {
   font-size: 12px;
   color: rgba(55, 65, 81, 0.92);
- }
+}
 
 :local(.heroImageContainer) {
   animation: fadeInUp 1s ease-out 0.3s both;
@@ -444,6 +451,13 @@
     flex-direction: row;
     gap: 32px;
   }
+}
+
+:local(.activeClassesContainer) {
+  margin-top: 24px !important;
+  display: flex;
+  justify-content: center;
+  animation: fadeInUp 0.8s ease-out 0.4s both;
 }
 
 :local(.roomsContainer) {
