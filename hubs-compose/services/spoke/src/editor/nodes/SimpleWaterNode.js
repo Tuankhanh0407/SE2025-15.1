@@ -1,10 +1,18 @@
 import EditorNodeMixin from "./EditorNodeMixin";
 import SimpleWater from "../objects/SimpleWater";
-import waterNormalsUrl from "../../assets/waternormals.jpg";
-import loadTexture from "../utils/loadTexture";
-import { Texture } from "three";
+import { DataTexture, RGBAFormat, RepeatWrapping, Texture, UnsignedByteType } from "three";
 
 let waterNormalMap = null;
+
+function createFallbackNormalMap() {
+  // Flat normal (0.5, 0.5, 1.0) to avoid hard dependency on external assets.
+  // This prevents Spoke from crashing if the normal map image is missing.
+  const data = new Uint8Array([128, 128, 255, 255]);
+  const texture = new DataTexture(data, 1, 1, RGBAFormat, UnsignedByteType);
+  texture.wrapS = texture.wrapT = RepeatWrapping;
+  texture.needsUpdate = true;
+  return texture;
+}
 
 export default class SimpleWaterNode extends EditorNodeMixin(SimpleWater) {
   static componentName = "simple-water";
@@ -42,7 +50,7 @@ export default class SimpleWaterNode extends EditorNodeMixin(SimpleWater) {
   }
 
   static async load() {
-    waterNormalMap = await loadTexture(waterNormalsUrl);
+    waterNormalMap = createFallbackNormalMap();
   }
 
   constructor(editor) {
