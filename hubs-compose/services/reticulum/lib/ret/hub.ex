@@ -406,7 +406,7 @@ defmodule Ret.Hub do
 
   def changeset(%Hub{} = hub, nil, attrs) do
     hub
-    |> cast(attrs, [:default_environment_gltf_bundle_url])
+    |> cast(attrs, [:default_environment_gltf_bundle_url, :entry_mode, :allow_promotion])
     |> add_attrs_to_changeset(attrs)
     |> add_hub_sid_to_changeset
     |> add_generated_tokens_to_changeset

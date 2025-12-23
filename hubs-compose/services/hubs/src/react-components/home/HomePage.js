@@ -6,6 +6,7 @@ import { CreateRoomButton } from "./CreateRoomButton";
 import { PWAButton } from "./PWAButton";
 import { useFavoriteRooms } from "./useFavoriteRooms";
 import { usePublicRooms } from "./usePublicRooms";
+import { ActiveClassesSidebar } from "./ActiveClassesSidebar";
 import styles from "./HomePage.scss";
 import { AuthContext } from "../auth/AuthContext";
 import { createAndRedirectToNewHub } from "../../utils/phoenix-utils";
@@ -173,80 +174,83 @@ export function HomePage() {
               </div>
             </div>
           </div>
-          <div className={styles.heroPanel}>
-            <div className={styles.heroPanelHeader}>
-              <div className={styles.heroPanelTitle}>
-                <FormattedMessage id="home-page.preview.title" defaultMessage="Classroom Preview" />
+          <div className={styles.rightColumn}>
+            <div className={styles.heroPanel}>
+              <div className={styles.heroPanelHeader}>
+                <div className={styles.heroPanelTitle}>
+                  <FormattedMessage id="home-page.preview.title" defaultMessage="Classroom Preview" />
+                </div>
+                <div className={styles.heroPanelSubtitle}>
+                  <FormattedMessage
+                    id="home-page.preview.subtitle"
+                    defaultMessage="A clean, distraction-free space for online lessons."
+                  />
+                </div>
               </div>
-              <div className={styles.heroPanelSubtitle}>
-                <FormattedMessage
-                  id="home-page.preview.subtitle"
-                  defaultMessage="A clean, distraction-free space for online lessons."
-                />
-              </div>
-            </div>
 
-            <div className={styles.heroPanelGrid}>
-              <div className={styles.heroPanelCard}>
-                <div className={styles.heroPanelCardTitle}>
-                  <FormattedMessage id="home-page.preview.feature.audio" defaultMessage="Live audio & chat" />
+              <div className={styles.heroPanelGrid}>
+                <div className={styles.heroPanelCard}>
+                  <div className={styles.heroPanelCardTitle}>
+                    <FormattedMessage id="home-page.preview.feature.audio" defaultMessage="Live audio & chat" />
+                  </div>
+                  <div className={styles.heroPanelCardText}>
+                    <FormattedMessage
+                      id="home-page.preview.feature.audio.text"
+                      defaultMessage="Communicate clearly with voice and text."
+                    />
+                  </div>
                 </div>
-                <div className={styles.heroPanelCardText}>
-                  <FormattedMessage
-                    id="home-page.preview.feature.audio.text"
-                    defaultMessage="Communicate clearly with voice and text."
-                  />
+                <div className={styles.heroPanelCard}>
+                  <div className={styles.heroPanelCardTitle}>
+                    <FormattedMessage id="home-page.preview.feature.media" defaultMessage="Share learning materials" />
+                  </div>
+                  <div className={styles.heroPanelCardText}>
+                    <FormattedMessage
+                      id="home-page.preview.feature.media.text"
+                      defaultMessage="Drop PDFs, videos, links and 3D models into the room."
+                    />
+                  </div>
+                </div>
+                <div className={styles.heroPanelCard}>
+                  <div className={styles.heroPanelCardTitle}>
+                    <FormattedMessage id="home-page.preview.feature.private" defaultMessage="Private by default" />
+                  </div>
+                  <div className={styles.heroPanelCardText}>
+                    <FormattedMessage
+                      id="home-page.preview.feature.private.text"
+                      defaultMessage="Invite-only access with safe sharing links."
+                    />
+                  </div>
+                </div>
+                <div className={styles.heroPanelCard}>
+                  <div className={styles.heroPanelCardTitle}>
+                    <FormattedMessage id="home-page.preview.feature.fast" defaultMessage="Fast to start" />
+                  </div>
+                  <div className={styles.heroPanelCardText}>
+                    <FormattedMessage
+                      id="home-page.preview.feature.fast.text"
+                      defaultMessage="Create a room in seconds. No installs required."
+                    />
+                  </div>
                 </div>
               </div>
-              <div className={styles.heroPanelCard}>
-                <div className={styles.heroPanelCardTitle}>
-                  <FormattedMessage id="home-page.preview.feature.media" defaultMessage="Share learning materials" />
-                </div>
-                <div className={styles.heroPanelCardText}>
-                  <FormattedMessage
-                    id="home-page.preview.feature.media.text"
-                    defaultMessage="Drop PDFs, videos, links and 3D models into the room."
-                  />
-                </div>
-              </div>
-              <div className={styles.heroPanelCard}>
-                <div className={styles.heroPanelCardTitle}>
-                  <FormattedMessage id="home-page.preview.feature.private" defaultMessage="Private by default" />
-                </div>
-                <div className={styles.heroPanelCardText}>
-                  <FormattedMessage
-                    id="home-page.preview.feature.private.text"
-                    defaultMessage="Invite-only access with safe sharing links."
-                  />
-                </div>
-              </div>
-              <div className={styles.heroPanelCard}>
-                <div className={styles.heroPanelCardTitle}>
-                  <FormattedMessage id="home-page.preview.feature.fast" defaultMessage="Fast to start" />
-                </div>
-                <div className={styles.heroPanelCardText}>
-                  <FormattedMessage
-                    id="home-page.preview.feature.fast.text"
-                    defaultMessage="Create a room in seconds. No installs required."
-                  />
-                </div>
-              </div>
-            </div>
 
-            <div className={styles.heroPanelFooter}>
-              <div className={styles.heroPanelFooterItem}>
-                <FormattedMessage id="home-page.preview.footer.teacher" defaultMessage="Teacher" />
-                : <b>
-                  <FormattedMessage id="home-page.preview.footer.teacher.value" defaultMessage="Create Room" />
-                </b>
-              </div>
-              <div className={styles.heroPanelFooterItem}>
-                <FormattedMessage id="home-page.preview.footer.student" defaultMessage="Student" />
-                : <b>
-                  <FormattedMessage id="home-page.preview.footer.student.value" defaultMessage="Join a class" />
-                </b>
+              <div className={styles.heroPanelFooter}>
+                <div className={styles.heroPanelFooterItem}>
+                  <FormattedMessage id="home-page.preview.footer.teacher" defaultMessage="Teacher" />
+                  : <b>
+                    <FormattedMessage id="home-page.preview.footer.teacher.value" defaultMessage="Create Room" />
+                  </b>
+                </div>
+                <div className={styles.heroPanelFooterItem}>
+                  <FormattedMessage id="home-page.preview.footer.student" defaultMessage="Student" />
+                  : <b>
+                    <FormattedMessage id="home-page.preview.footer.student.value" defaultMessage="Join a class" />
+                  </b>
+                </div>
               </div>
             </div>
+            <ActiveClassesSidebar />
           </div>
         </div>
       </Container>
@@ -288,28 +292,6 @@ export function HomePage() {
                 defaultMessage="Share content with others in your room by dragging and dropping photos, videos, PDF files, links, and 3D models into your space."
               />
             </p>
-          </Column>
-        </Container>
-      )}
-      {sortedPublicRooms.length > 0 && (
-        <Container className={styles.roomsContainer}>
-          <h3 className={styles.roomsHeading}>
-            <FormattedMessage id="home-page.public--rooms" defaultMessage="Public Rooms" />
-          </h3>
-          <Column grow padding className={styles.rooms}>
-            <MediaGrid center>
-              {sortedPublicRooms.map(room => {
-                return (
-                  <MediaTile
-                    key={room.id}
-                    entry={room}
-                    processThumbnailUrl={(entry, width, height) =>
-                      scaledThumbnailUrlFor(entry.images.preview.url, width, height)
-                    }
-                  />
-                );
-              })}
-            </MediaGrid>
           </Column>
         </Container>
       )}
